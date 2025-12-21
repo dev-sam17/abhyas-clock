@@ -1,45 +1,45 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated/prisma"
 }
 
 // Test Preset - Just metadata (name, question count, time limit, mode)
 model TestPreset {
-  id                  Int            @id @default(autoincrement())
-  name                String         @db.VarChar(255)
-  totalQuestions      Int            @map("total_questions")
-  startingQuestion    Int            @default(1) @map("starting_question")
-  inputType           String         @default("radio") @map("input_type") @db.VarChar(10) // "radio" or "text"
-  testMode            String         @map("test_mode") @db.VarChar(20) // "timer" or "stopwatch"
-  timeLimitMinutes    Int?           @map("time_limit_minutes") // Only for timer mode
-  allowOvertime       Boolean        @default(false) @map("allow_overtime") // Only for timer mode
-  createdAt           DateTime       @default(now()) @map("created_at")
-  attempts            TestAttempt[]
+  id               Int           @id @default(autoincrement())
+  name             String        @db.VarChar(255)
+  totalQuestions   Int           @map("total_questions")
+  startingQuestion Int           @default(1) @map("starting_question")
+  inputType        String        @default("radio") @map("input_type") @db.VarChar(10) // "radio" or "text"
+  testMode         String        @map("test_mode") @db.VarChar(20) // "timer" or "stopwatch"
+  timeLimitMinutes Int?          @map("time_limit_minutes") // Only for timer mode
+  allowOvertime    Boolean       @default(false) @map("allow_overtime") // Only for timer mode
+  createdAt        DateTime      @default(now()) @map("created_at")
+  attempts         TestAttempt[]
 
   @@map("test_presets")
 }
 
 // Test Attempt - Student's answer entry session
 model TestAttempt {
-  id                Int          @id @default(autoincrement())
-  presetId          Int          @map("preset_id")
-  startedAt         DateTime     @default(now()) @map("started_at")
-  completedAt       DateTime?    @map("completed_at")
-  timeTakenSeconds  Int?         @map("time_taken_seconds")
-  overtimeSeconds   Int?         @map("overtime_seconds") // Time taken beyond limit
-  isEvaluated       Boolean      @default(false) @map("is_evaluated")
-  totalQuestions    Int          @map("total_questions")
-  correctAnswers    Int?         @map("correct_answers")
-  incorrectAnswers  Int?         @map("incorrect_answers")
-  unanswered        Int?
-  percentage        Decimal?     @db.Decimal(5, 2)
-  preset            TestPreset   @relation(fields: [presetId], references: [id], onDelete: Cascade)
-  answers           Answer[]
-  answerKey         AnswerKey?
+  id               Int        @id @default(autoincrement())
+  presetId         Int        @map("preset_id")
+  startedAt        DateTime   @default(now()) @map("started_at")
+  completedAt      DateTime?  @map("completed_at")
+  timeTakenSeconds Int?       @map("time_taken_seconds")
+  overtimeSeconds  Int?       @map("overtime_seconds") // Time taken beyond limit
+  isEvaluated      Boolean    @default(false) @map("is_evaluated")
+  totalQuestions   Int        @map("total_questions")
+  correctAnswers   Int?       @map("correct_answers")
+  incorrectAnswers Int?       @map("incorrect_answers")
+  unanswered       Int?
+  percentage       Decimal?   @db.Decimal(5, 2)
+  preset           TestPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  answers          Answer[]
+  answerKey        AnswerKey?
 
   @@index([presetId])
   @@map("test_attempts")

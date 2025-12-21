@@ -1,65 +1,71 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Switch } from "@/components/ui/switch"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export function CreatePresetForm() {
-  const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [testName, setTestName] = useState("")
-  const [totalQuestions, setTotalQuestions] = useState("")
-  const [startingQuestion, setStartingQuestion] = useState("1")
-  const [inputType, setInputType] = useState<"radio" | "text">("radio")
-  const [testMode, setTestMode] = useState<"timer" | "stopwatch">("timer")
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState("")
-  const [allowOvertime, setAllowOvertime] = useState(false)
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testName, setTestName] = useState("");
+  const [totalQuestions, setTotalQuestions] = useState("");
+  const [startingQuestion, setStartingQuestion] = useState("1");
+  const [inputType, setInputType] = useState<"radio" | "text">("radio");
+  const [testMode, setTestMode] = useState<"timer" | "stopwatch">("timer");
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState("");
+  const [allowOvertime, setAllowOvertime] = useState(false);
 
   const calculateEndingQuestion = () => {
-    const start = Number.parseInt(startingQuestion)
-    const total = Number.parseInt(totalQuestions)
-    if (isNaN(start) || isNaN(total)) return null
-    return start + total - 1
-  }
+    const start = Number.parseInt(startingQuestion);
+    const total = Number.parseInt(totalQuestions);
+    if (isNaN(start) || isNaN(total)) return null;
+    return start + total - 1;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!testName.trim()) {
-      toast.error("Please enter a test name")
-      return
+      toast.error("Please enter a test name");
+      return;
     }
 
-    const questions = Number.parseInt(totalQuestions)
+    const questions = Number.parseInt(totalQuestions);
     if (isNaN(questions) || questions < 1) {
-      toast.error("Please enter a valid number of questions (minimum 1)")
-      return
+      toast.error("Please enter a valid number of questions (minimum 1)");
+      return;
     }
 
-    const startingQ = Number.parseInt(startingQuestion)
+    const startingQ = Number.parseInt(startingQuestion);
     if (isNaN(startingQ) || startingQ < 1) {
-      toast.error("Please enter a valid starting question number (minimum 1)")
-      return
+      toast.error("Please enter a valid starting question number (minimum 1)");
+      return;
     }
 
     if (testMode === "timer") {
-      const timeLimit = Number.parseInt(timeLimitMinutes)
+      const timeLimit = Number.parseInt(timeLimitMinutes);
       if (isNaN(timeLimit) || timeLimit < 1) {
-        toast.error("Please enter a valid time limit in minutes")
-        return
+        toast.error("Please enter a valid time limit in minutes");
+        return;
       }
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/presets", {
@@ -68,40 +74,42 @@ export function CreatePresetForm() {
         body: JSON.stringify({
           name: testName.trim(),
           totalQuestions: questions,
-          startingQuestionNumber: startingQ,
+          startingQuestion: startingQ,
           inputType,
           testMode,
-          timeLimitMinutes: testMode === "timer" ? Number.parseInt(timeLimitMinutes) : null,
+          timeLimitMinutes:
+            testMode === "timer" ? Number.parseInt(timeLimitMinutes) : null,
           allowOvertime: testMode === "timer" ? allowOvertime : false,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.log("[v0] Error response:", errorData)
-        throw new Error(errorData.error || "Failed to create preset")
+        const errorData = await response.json();
+        console.log("[v0] Error response:", errorData);
+        throw new Error(errorData.error || "Failed to create preset");
       }
 
-      const data = await response.json()
-      console.log("[v0] Preset created successfully:", data)
-      toast.success("Test preset created successfully!")
-      router.push("/presets")
+      const data = await response.json();
+      console.log("[v0] Preset created successfully:", data);
+      toast.success("Test preset created successfully!");
+      router.push("/presets");
     } catch (error) {
-      console.error("[v0] Error creating preset:", error)
-      toast.error("Failed to create test preset. Please try again.")
+      console.error("[v0] Error creating preset:", error);
+      toast.error("Failed to create test preset. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const endingQuestion = calculateEndingQuestion()
+  const endingQuestion = calculateEndingQuestion();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Test Configuration</CardTitle>
         <CardDescription>
-          Create a test preset that defines the structure and timing for your OMR answer entry
+          Create a test preset that defines the structure and timing for your
+          OMR answer entry
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -130,7 +138,9 @@ export function CreatePresetForm() {
                 onChange={(e) => setStartingQuestion(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">The first question number in your test</p>
+              <p className="text-xs text-muted-foreground">
+                The first question number in your test
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -144,14 +154,22 @@ export function CreatePresetForm() {
                 onChange={(e) => setTotalQuestions(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">Total number of questions in the test</p>
+              <p className="text-xs text-muted-foreground">
+                Total number of questions in the test
+              </p>
             </div>
 
             {endingQuestion && (
               <div className="rounded-lg bg-primary/10 p-3 border border-primary/20">
                 <p className="text-sm font-medium">
-                  Questions will be numbered from <span className="font-bold text-primary">{startingQuestion}</span> to{" "}
-                  <span className="font-bold text-primary">{endingQuestion}</span>
+                  Questions will be numbered from{" "}
+                  <span className="font-bold text-primary">
+                    {startingQuestion}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-bold text-primary">
+                    {endingQuestion}
+                  </span>
                 </p>
               </div>
             )}
@@ -159,7 +177,10 @@ export function CreatePresetForm() {
 
           <div className="space-y-3">
             <Label>Answer Input Type</Label>
-            <RadioGroup value={inputType} onValueChange={(value) => setInputType(value as "radio" | "text")}>
+            <RadioGroup
+              value={inputType}
+              onValueChange={(value) => setInputType(value as "radio" | "text")}
+            >
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                 <RadioGroupItem value="radio" id="radio" className="mt-1" />
                 <div className="flex-1">
@@ -178,7 +199,8 @@ export function CreatePresetForm() {
                     Text Input
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Free text input - Students type their answers for each question
+                    Free text input - Students type their answers for each
+                    question
                   </p>
                 </div>
               </div>
@@ -188,7 +210,12 @@ export function CreatePresetForm() {
           {/* Test Mode */}
           <div className="space-y-3">
             <Label>Test Mode</Label>
-            <RadioGroup value={testMode} onValueChange={(value) => setTestMode(value as "timer" | "stopwatch")}>
+            <RadioGroup
+              value={testMode}
+              onValueChange={(value) =>
+                setTestMode(value as "timer" | "stopwatch")
+              }
+            >
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                 <RadioGroupItem value="timer" id="timer" className="mt-1" />
                 <div className="flex-1">
@@ -196,18 +223,27 @@ export function CreatePresetForm() {
                     Timer-Based Test
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Countdown timer with optional overtime tracking. Simulates exam-like pressure.
+                    Countdown timer with optional overtime tracking. Simulates
+                    exam-like pressure.
                   </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
-                <RadioGroupItem value="stopwatch" id="stopwatch" className="mt-1" />
+                <RadioGroupItem
+                  value="stopwatch"
+                  id="stopwatch"
+                  className="mt-1"
+                />
                 <div className="flex-1">
-                  <Label htmlFor="stopwatch" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="stopwatch"
+                    className="font-medium cursor-pointer"
+                  >
                     Stopwatch-Based Test
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    No time limit. Total time is tracked until the user ends the test.
+                    No time limit. Total time is tracked until the user ends the
+                    test.
                   </p>
                 </div>
               </div>
@@ -233,9 +269,15 @@ export function CreatePresetForm() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="allowOvertime">Allow Overtime</Label>
-                  <p className="text-sm text-muted-foreground">Continue tracking time after the limit expires</p>
+                  <p className="text-sm text-muted-foreground">
+                    Continue tracking time after the limit expires
+                  </p>
                 </div>
-                <Switch id="allowOvertime" checked={allowOvertime} onCheckedChange={setAllowOvertime} />
+                <Switch
+                  id="allowOvertime"
+                  checked={allowOvertime}
+                  onCheckedChange={setAllowOvertime}
+                />
               </div>
             </div>
           )}
@@ -254,5 +296,5 @@ export function CreatePresetForm() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

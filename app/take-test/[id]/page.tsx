@@ -1,25 +1,31 @@
-import { notFound } from "next/navigation"
-import { prisma } from "@/lib/prisma"
-import { OMRInterface } from "@/components/omr-interface"
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { OMRInterface } from "@/components/omr-interface";
 
-export default async function TakeTestPage({ params }: { params: { id: string } }) {
-  const presetId = Number.parseInt(params.id)
+export default async function TakeTestPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const presetId = Number.parseInt((await params).id);
+
+  console.log("Preset ID:", presetId);
 
   if (isNaN(presetId)) {
-    notFound()
+    notFound();
   }
 
   const preset = await prisma.testPreset.findUnique({
     where: { id: presetId },
-  })
+  });
 
   if (!preset) {
-    notFound()
+    notFound();
   }
 
   return (
     <div className="min-h-screen bg-background">
       <OMRInterface preset={preset} />
     </div>
-  )
+  );
 }

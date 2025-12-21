@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - '@tailwindcss/oxide'
+  - better-sqlite3
+  - prisma
+  - sharp

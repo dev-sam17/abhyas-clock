@@ -1,12 +1,16 @@
-import { notFound } from "next/navigation"
-import { prisma } from "@/lib/prisma"
-import { AnswerKeyForm } from "@/components/answer-key-form"
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { AnswerKeyForm } from "@/components/answer-key-form";
 
-export default async function EnterAnswerKeyPage({ params }: { params: { id: string } }) {
-  const attemptId = Number.parseInt(params.id)
+export default async function EnterAnswerKeyPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const attemptId = Number.parseInt((await params).id);
 
   if (isNaN(attemptId)) {
-    notFound()
+    notFound();
   }
 
   const attempt = await prisma.testAttempt.findUnique({
@@ -18,18 +22,22 @@ export default async function EnterAnswerKeyPage({ params }: { params: { id: str
       },
       answerKey: true,
     },
-  })
+  });
 
   if (!attempt) {
-    notFound()
+    notFound();
   }
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <h1 className="text-3xl font-bold text-foreground">Enter Answer Key</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Enter the correct answers to evaluate your performance</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Enter Answer Key
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enter the correct answers to evaluate your performance
+          </p>
         </div>
       </header>
 
@@ -37,5 +45,5 @@ export default async function EnterAnswerKeyPage({ params }: { params: { id: str
         <AnswerKeyForm attempt={attempt} />
       </main>
     </div>
-  )
+  );
 }

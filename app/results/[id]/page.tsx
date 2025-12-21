@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { prisma } from "@/lib/prisma"
-import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
-import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { prisma } from "@/lib/prisma";
+import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
+import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react";
 
 async function getAttempt(id: string) {
   const attempt = await prisma.testAttempt.findUnique({
@@ -16,39 +16,48 @@ async function getAttempt(id: string) {
       },
       answerKey: true,
     },
-  })
+  });
 
-  return attempt
+  return attempt;
 }
 
-export default async function ResultsPage({ params }: { params: { id: string } }) {
-  const { id } = params
-  const attempt = await getAttempt(id)
+export default async function ResultsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { id } = await params;
+  const attempt = await getAttempt(id);
 
   if (!attempt) {
-    notFound()
+    notFound();
   }
 
   // Redirect to answer key entry if not yet evaluated
   if (!attempt.isEvaluated) {
-    redirect(`/enter-key/${id}`)
+    redirect(`/enter-key/${id}`);
   }
 
   const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600)
-    const mins = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
-  }
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(
+      2,
+      "0"
+    )}:${String(secs).padStart(2, "0")}`;
+  };
 
-  const correctAnswersArray = attempt.answerKey?.correctAnswers as string[]
+  const correctAnswersArray = attempt.answerKey?.correctAnswers as string[];
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6">
           <h1 className="text-3xl font-bold text-foreground">Test Results</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{attempt.preset.name}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {attempt.preset.name}
+          </p>
         </div>
       </header>
 
@@ -61,7 +70,9 @@ export default async function ResultsPage({ params }: { params: { id: string } }
               <Award className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{Number(attempt.percentage).toFixed(1)}%</div>
+              <div className="text-2xl font-bold">
+                {Number(attempt.percentage).toFixed(1)}%
+              </div>
               <p className="text-xs text-muted-foreground">
                 {attempt.correctAnswers}/{attempt.totalQuestions} correct
               </p>
@@ -74,7 +85,9 @@ export default async function ResultsPage({ params }: { params: { id: string } }
               <CheckCircle className="size-4 flex-shrink-0 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{attempt.correctAnswers}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {attempt.correctAnswers}
+              </div>
               <p className="text-xs text-muted-foreground">Answers</p>
             </CardContent>
           </Card>
@@ -85,7 +98,9 @@ export default async function ResultsPage({ params }: { params: { id: string } }
               <XCircle className="size-4 flex-shrink-0 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{attempt.incorrectAnswers}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {attempt.incorrectAnswers}
+              </div>
               <p className="text-xs text-muted-foreground">Answers</p>
             </CardContent>
           </Card>
@@ -96,9 +111,13 @@ export default async function ResultsPage({ params }: { params: { id: string } }
               <Clock className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatTime(attempt.timeTakenSeconds || 0)}</div>
+              <div className="text-2xl font-bold">
+                {formatTime(attempt.timeTakenSeconds || 0)}
+              </div>
               {attempt.overtimeSeconds && attempt.overtimeSeconds > 0 && (
-                <p className="text-xs text-destructive">+{formatTime(attempt.overtimeSeconds)} overtime</p>
+                <p className="text-xs text-destructive">
+                  +{formatTime(attempt.overtimeSeconds)} overtime
+                </p>
               )}
             </CardContent>
           </Card>
@@ -108,13 +127,16 @@ export default async function ResultsPage({ params }: { params: { id: string } }
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Answer Review</CardTitle>
-            <p className="text-sm text-muted-foreground">Compare your answers with the correct ones</p>
+            <p className="text-sm text-muted-foreground">
+              Compare your answers with the correct ones
+            </p>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3">
               {attempt.answers.map((answer) => {
-                const correctAnswer = correctAnswersArray[answer.questionNumber - 1]
-                const isCorrect = answer.isCorrect
+                const correctAnswer =
+                  correctAnswersArray[answer.questionNumber - 1];
+                const isCorrect = answer.isCorrect;
 
                 return (
                   <div
@@ -123,8 +145,8 @@ export default async function ResultsPage({ params }: { params: { id: string } }
                       isCorrect
                         ? "border-green-600/50 bg-green-50 dark:bg-green-950/20"
                         : answer.selectedAnswer === null
-                          ? "border-border bg-muted/30"
-                          : "border-red-600/50 bg-red-50 dark:bg-red-950/20"
+                        ? "border-border bg-muted/30"
+                        : "border-red-600/50 bg-red-50 dark:bg-red-950/20"
                     }`}
                   >
                     {/* Question Number */}
@@ -134,9 +156,14 @@ export default async function ResultsPage({ params }: { params: { id: string } }
 
                     {/* Your Answer */}
                     <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">Your answer:</div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        Your answer:
+                      </div>
                       {answer.selectedAnswer ? (
-                        <Badge variant={isCorrect ? "default" : "destructive"} className="text-base px-3 py-1">
+                        <Badge
+                          variant={isCorrect ? "default" : "destructive"}
+                          className="text-base px-3 py-1"
+                        >
                           {answer.selectedAnswer}
                         </Badge>
                       ) : (
@@ -149,8 +176,13 @@ export default async function ResultsPage({ params }: { params: { id: string } }
 
                     {/* Correct Answer */}
                     <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">Correct answer:</div>
-                      <Badge variant="default" className="bg-green-600 text-base px-3 py-1">
+                      <div className="text-xs text-muted-foreground mb-1">
+                        Correct answer:
+                      </div>
+                      <Badge
+                        variant="default"
+                        className="bg-green-600 text-base px-3 py-1"
+                      >
                         {correctAnswer}
                       </Badge>
                     </div>
@@ -164,7 +196,7 @@ export default async function ResultsPage({ params }: { params: { id: string } }
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </CardContent>
@@ -183,5 +215,5 @@ export default async function ResultsPage({ params }: { params: { id: string } }
         </div>
       </main>
     </div>
-  )
+  );
 }
