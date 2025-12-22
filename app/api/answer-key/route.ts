@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       where: { id: attemptId },
       include: {
         answers: true,
+        preset: true,
       },
     })
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
     let unanswered = 0
 
     const answerUpdates = attempt.answers.map((answer) => {
-      const correctAnswer = correctAnswers[answer.questionNumber - 1]
+      const correctAnswer = correctAnswers[answer.questionNumber - attempt.preset.startingQuestion]
       const isCorrect = answer.selectedAnswer === correctAnswer
 
       if (answer.selectedAnswer === null) {
@@ -59,9 +60,20 @@ export async function POST(request: NextRequest) {
 
     const percentage = attempt.totalQuestions > 0 ? (correct / attempt.totalQuestions) * 100 : 0
 
-    // Update in a transaction
     await prisma.$transaction([
-      // Create answer key
+      // Create/update preset-level answer key for future attempts
+      prisma.presetAnswerKey.upsert({
+        where: { presetId: attempt.presetId },
+        create: {
+          presetId: attempt.presetId,
+          correctAnswers,
+        },
+        update: {
+          correctAnswers,
+          updatedAt: new Date(),
+        },
+      }),
+      // Create answer key for this attempt (legacy support)
       prisma.answerKey.create({
         data: {
           attemptId,

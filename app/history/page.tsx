@@ -69,7 +69,7 @@ export default async function HistoryPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <Link href="/">
+          <Link href="/home">
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="mr-2 size-4" />
               Back to Home

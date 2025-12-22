@@ -21,6 +21,7 @@ model TestPreset {
   timeLimitMinutes Int?          @map("time_limit_minutes") // Only for timer mode
   allowOvertime    Boolean       @default(false) @map("allow_overtime") // Only for timer mode
   createdAt        DateTime      @default(now()) @map("created_at")
+  presetAnswerKey  PresetAnswerKey?
   attempts         TestAttempt[]
 
   @@map("test_presets")
@@ -75,6 +76,17 @@ model AnswerKey {
   attempt        TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@map("answer_keys")
+}
+
+model PresetAnswerKey {
+  id             Int        @id @default(autoincrement())
+  presetId       Int        @unique @map("preset_id")
+  correctAnswers Json       @map("correct_answers") // JSON array: ["A", "B", "C", ...]
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  preset         TestPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+
+  @@map("preset_answer_keys")
 }
 
 model User {

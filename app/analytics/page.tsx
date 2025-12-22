@@ -5,17 +5,22 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PerformanceChart } from "@/components/performance-chart"
 import { TestBreakdown } from "@/components/test-breakdown"
+import { QuestionAnalytics } from "@/components/question-analytics"
 
 async function getAnalytics() {
   const attempts = await prisma.testAttempt.findMany({
     where: {
-      isEvaluated: true, // Only show evaluated attempts in analytics
+      isEvaluated: true,
     },
     include: {
       preset: {
         select: {
           name: true,
+          startingQuestion: true,
         },
+      },
+      answers: {
+        orderBy: { questionNumber: "asc" },
       },
     },
     orderBy: {
@@ -30,6 +35,7 @@ async function getAnalytics() {
       totalTime: 0,
       bestScore: 0,
       attempts: [],
+      questionStats: [],
     }
   }
 
@@ -51,12 +57,45 @@ async function getAnalytics() {
     preset_name: attempt.preset.name,
   }))
 
+  const questionStatsMap = new Map<number, { correct: number; incorrect: number; unanswered: number; total: number }>()
+
+  attempts.forEach((attempt) => {
+    attempt.answers.forEach((answer) => {
+      const qNum = answer.questionNumber
+      if (!questionStatsMap.has(qNum)) {
+        questionStatsMap.set(qNum, { correct: 0, incorrect: 0, unanswered: 0, total: 0 })
+      }
+      const stats = questionStatsMap.get(qNum)!
+      stats.total++
+
+      if (answer.selectedAnswer === null) {
+        stats.unanswered++
+      } else if (answer.isCorrect) {
+        stats.correct++
+      } else {
+        stats.incorrect++
+      }
+    })
+  })
+
+  const questionStats = Array.from(questionStatsMap.entries())
+    .map(([questionNumber, stats]) => ({
+      questionNumber,
+      timesAttempted: stats.total,
+      timesCorrect: stats.correct,
+      timesIncorrect: stats.incorrect,
+      timesUnanswered: stats.unanswered,
+      accuracy: stats.total > 0 ? (stats.correct / stats.total) * 100 : 0,
+    }))
+    .sort((a, b) => a.questionNumber - b.questionNumber)
+
   return {
     totalAttempts,
     averageScore,
     totalTime,
     bestScore,
     attempts: formattedAttempts,
+    questionStats,
   }
 }
 
@@ -73,7 +112,7 @@ export default async function AnalyticsPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <Link href="/">
+          <Link href="/home">
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="mr-2 size-4" />
               Back to Home
@@ -147,6 +186,8 @@ export default async function AnalyticsPage() {
             <PerformanceChart attempts={analytics.attempts} />
 
             <TestBreakdown attempts={analytics.attempts} />
+
+            <QuestionAnalytics questionStats={analytics.questionStats} />
           </div>
         )}
       </main>
