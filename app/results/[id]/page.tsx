@@ -5,16 +5,22 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react";
+import { BackButton } from "@/components/back-button";
+import { HomeButton } from "@/components/home-button";
+import { Footer } from "@/components/footer";
 
 async function getAttempt(id: string) {
   const attempt = await prisma.testAttempt.findUnique({
     where: { id: Number.parseInt(id) },
     include: {
-      preset: true,
+      preset: {
+        include: {
+          presetAnswerKey: true,
+        },
+      },
       answers: {
         orderBy: { questionNumber: "asc" },
       },
-      answerKey: true,
     },
   });
 
@@ -48,20 +54,30 @@ export default async function ResultsPage({
     )}:${String(secs).padStart(2, "0")}`;
   };
 
-  const correctAnswersArray = attempt.answerKey?.correctAnswers as string[];
+  const correctAnswers = attempt.preset.presetAnswerKey?.correctAnswers as
+    | string[]
+    | undefined;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <h1 className="text-3xl font-bold text-foreground">Test Results</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {attempt.preset.name}
-          </p>
+          <div className="flex items-center gap-2">
+            <BackButton />
+            <HomeButton />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Test Results
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {attempt.preset.name}
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
         {/* Stats Cards */}
         <div className="mb-8 grid gap-4 md:grid-cols-4">
           <Card>
@@ -82,7 +98,7 @@ export default async function ResultsPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Correct</CardTitle>
-              <CheckCircle className="size-4 flex-shrink-0 text-green-600" />
+              <CheckCircle className="size-4 shrink-0 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
@@ -95,7 +111,7 @@ export default async function ResultsPage({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Incorrect</CardTitle>
-              <XCircle className="size-4 flex-shrink-0 text-red-600" />
+              <XCircle className="size-4 shrink-0 text-red-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
@@ -134,9 +150,11 @@ export default async function ResultsPage({
           <CardContent>
             <div className="grid gap-3">
               {attempt.answers.map((answer) => {
-                const correctAnswer =
-                  correctAnswersArray[answer.questionNumber - 1];
                 const isCorrect = answer.isCorrect;
+                const correctAnswer =
+                  correctAnswers?.[
+                    answer.questionNumber - attempt.preset.startingQuestion
+                  ];
 
                 return (
                   <div
@@ -145,8 +163,8 @@ export default async function ResultsPage({
                       isCorrect
                         ? "border-green-600/50 bg-green-50 dark:bg-green-950/20"
                         : answer.selectedAnswer === null
-                        ? "border-border bg-muted/30"
-                        : "border-red-600/50 bg-red-50 dark:bg-red-950/20"
+                          ? "border-border bg-muted/30"
+                          : "border-red-600/50 bg-red-50 dark:bg-red-950/20"
                     }`}
                   >
                     {/* Question Number */}
@@ -175,17 +193,19 @@ export default async function ResultsPage({
                     </div>
 
                     {/* Correct Answer */}
-                    <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">
-                        Correct answer:
+                    {correctAnswer && (
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground mb-1">
+                          Correct answer:
+                        </div>
+                        <Badge
+                          variant="default"
+                          className="bg-green-600 text-base px-3 py-1"
+                        >
+                          {correctAnswer}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant="default"
-                        className="bg-green-600 text-base px-3 py-1"
-                      >
-                        {correctAnswer}
-                      </Badge>
-                    </div>
+                    )}
 
                     {/* Status Icon */}
                     <div className="shrink-0">
@@ -214,6 +234,7 @@ export default async function ResultsPage({
           </Link>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
