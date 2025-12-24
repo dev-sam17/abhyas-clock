@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
+
     const {
       name,
       totalQuestions,
@@ -12,6 +21,8 @@ export async function POST(request: Request) {
       testMode,
       timeLimitMinutes,
       allowOvertime,
+      isPublic,
+      collectionId,
     } = body;
 
     console.log("[v0] Creating preset with data:", body);
@@ -65,6 +76,9 @@ export async function POST(request: Request) {
         testMode,
         timeLimitMinutes: testMode === "timer" ? timeLimitMinutes : null,
         allowOvertime: testMode === "timer" ? allowOvertime : false,
+        isPublic: isPublic || false,
+        userId: session.user.id,
+        collectionId: collectionId || null,
       },
     });
 
@@ -86,11 +100,28 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const presets = await prisma.testPreset.findMany({
+      where: {
+        OR: [{ userId: session.user.id }, { isPublic: true }],
+      },
       orderBy: { createdAt: "desc" },
       include: {
         _count: {
           select: { attempts: true },
+        },
+        collection: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
       },
     });
@@ -100,6 +131,110 @@ export async function GET() {
     console.error("[v0] Error fetching presets:", error);
     return NextResponse.json(
       { error: "Failed to fetch test presets" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Preset ID required" },
+        { status: 400 }
+      );
+    }
+
+    const preset = await prisma.testPreset.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!preset) {
+      return NextResponse.json({ error: "Preset not found" }, { status: 404 });
+    }
+
+    if (preset.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await prisma.testPreset.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[v0] Error deleting preset:", error);
+    return NextResponse.json(
+      { error: "Failed to delete preset" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      id,
+      name,
+      isPublic,
+      collectionId,
+      testMode,
+      timeLimitMinutes,
+      allowOvertime,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Preset ID required" },
+        { status: 400 }
+      );
+    }
+
+    const preset = await prisma.testPreset.findUnique({
+      where: { id },
+    });
+
+    if (!preset) {
+      return NextResponse.json({ error: "Preset not found" }, { status: 404 });
+    }
+
+    if (preset.userId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updatedPreset = await prisma.testPreset.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(isPublic !== undefined && { isPublic }),
+        ...(collectionId !== undefined && { collectionId }),
+        ...(testMode !== undefined && { testMode }),
+        ...(timeLimitMinutes !== undefined && { timeLimitMinutes }),
+        ...(allowOvertime !== undefined && { allowOvertime }),
+      },
+    });
+
+    return NextResponse.json(updatedPreset);
+  } catch (error) {
+    console.error("[v0] Error updating preset:", error);
+    return NextResponse.json(
+      { error: "Failed to update preset" },
       { status: 500 }
     );
   }
