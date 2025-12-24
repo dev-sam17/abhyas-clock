@@ -92,21 +92,17 @@ export default async function HistoryPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <BackButton />
-              <HomeButton />
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Test History
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  View all your past test attempts
-                </p>
-              </div>
-            </div>
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <BackButton />
+            <HomeButton />
           </div>
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+            Test History
+          </h1>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+            View all your past test attempts
+          </p>
         </div>
       </header>
 

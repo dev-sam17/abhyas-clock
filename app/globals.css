@@ -3,6 +3,65 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Responsive Typography for Mobile and Tablet */
+@layer base {
+  html {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+    
+    h1 {
+      font-size: 1.75rem !important;
+      line-height: 2rem !important;
+    }
+    
+    h2 {
+      font-size: 1.5rem !important;
+      line-height: 1.75rem !important;
+    }
+    
+    h3 {
+      font-size: 1.25rem !important;
+      line-height: 1.5rem !important;
+    }
+    
+    .text-3xl {
+      font-size: 1.5rem !important;
+      line-height: 2rem !important;
+    }
+    
+    .text-2xl {
+      font-size: 1.25rem !important;
+      line-height: 1.75rem !important;
+    }
+    
+    .text-xl {
+      font-size: 1.125rem !important;
+      line-height: 1.5rem !important;
+    }
+  }
+  
+  @media (min-width: 641px) and (max-width: 1024px) {
+    html {
+      font-size: 15px;
+    }
+    
+    h1 {
+      font-size: 2rem !important;
+      line-height: 2.25rem !important;
+    }
+    
+    h2 {
+      font-size: 1.75rem !important;
+      line-height: 2rem !important;
+    }
+  }
+}
+
 :root {
   /* Professional triple-tone palette: Warm cream, soft slate-blue, and deep navy for light mode */
   --background: oklch(0.98 0.005 85);

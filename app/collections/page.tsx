@@ -181,23 +181,20 @@ export default function CollectionsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="flex items-center gap-2">
               <BackButton />
               <HomeButton />
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Collections
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Organize your test presets into collections
-                </p>
-              </div>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <PlusCircle className="mr-2 size-4" />
-              Create Collection
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              <PlusCircle className="mr-1 size-3 sm:mr-2 sm:size-4" />
+              <span className="hidden sm:inline">Create Collection</span>
+              <span className="sm:hidden">Create</span>
             </Button>
           </div>
         </div>

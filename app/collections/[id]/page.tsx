@@ -53,16 +53,16 @@ export default async function CollectionDetailPage({
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <BackButton />
               <HomeButton />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">
                   {collection.name}
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground sm:text-sm">
                   {collection.description ||
                     "View all presets in this collection"}
                 </p>

@@ -54,28 +54,28 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
                 Abhyas Clock
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
                 Practice offline, enter answers online, and track your progress
                 with smart analytics.
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
               {user && (
                 <div className="flex items-center gap-2">
                   {user.image && (
                     <img
                       src={user.image}
                       alt={user.name}
-                      className="size-8 rounded-full"
+                      className="size-7 rounded-full sm:size-8"
                     />
                   )}
-                  <div className="hidden flex-col sm:flex">
+                  <div className="hidden flex-col md:flex">
                     <span className="text-sm font-medium">{user.name}</span>
                     <span className="text-xs text-muted-foreground">
                       {user.email}
@@ -83,9 +83,15 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="mr-2 size-4" />
-                Sign Out
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-xs sm:text-sm"
+              >
+                <LogOut className="mr-1 size-3 sm:mr-2 sm:size-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+                <span className="sm:hidden">Out</span>
               </Button>
             </div>
           </div>

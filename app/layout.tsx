@@ -12,6 +12,19 @@ export const metadata: Metadata = {
   title: "Abhyas Clock - Master Your Competitive Exams",
   description:
     "Practice offline competitive exam papers with detailed analytics",
+  manifest: "/manifest.json",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: "#3b82f6",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Abhyas Clock",
+  },
   icons: {
     icon: [
       {
@@ -40,6 +53,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`font-sans antialiased`}>
         <div className="fixed right-4 top-4 z-50">
           <ThemeToggle />

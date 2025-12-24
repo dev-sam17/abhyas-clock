@@ -433,213 +433,225 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div>
-              <h1 className="text-lg font-bold">{preset.name}</h1>
-              <p className="text-sm text-muted-foreground">
-                Question No. {currentQuestion?.questionNumber}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Timer Display */}
-              <Card className="border-2">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    {isTimerMode ? (
-                      <Timer className="size-5" />
-                    ) : (
-                      <Clock className="size-5" />
-                    )}
-                    <div className="text-center">
-                      {isTimerMode && timeRemaining !== null ? (
-                        <>
-                          <div
+      <div className="min-h-screen bg-background p-2 sm:p-4 md:p-6">
+        <Card className="mx-auto max-w-6xl">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <header className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div>
+                <h2 className="text-xl font-bold sm:text-2xl">{preset.name}</h2>
+                <p className="text-xs text-muted-foreground sm:text-sm">
+                  {preset.totalQuestions} questions • Starting from Q
+                  {preset.startingQuestion}
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                {/* Timer Display */}
+                <Card className="border-2">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      {preset.testMode === "timer" && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Timer className="size-4 sm:size-5" />
+                          <span
                             className={cn(
-                              "text-xl font-mono font-bold",
+                              "text-base font-bold sm:text-lg",
                               isOvertime && "text-destructive"
                             )}
                           >
-                            {formatTime(timeRemaining)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {isOvertime
-                              ? `+${formatTime(seconds - preset.timeLimitMinutes! * 60)} overtime`
-                              : "remaining"}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-xl font-mono font-bold">
                             {formatTime(seconds)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            elapsed
-                          </div>
-                        </>
+                          </span>
+                          {isOvertime && (
+                            <Badge variant="destructive" className="text-xs">
+                              Overtime
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                      {preset.testMode === "stopwatch" && (
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Clock className="size-4 sm:size-5" />
+                          <span className="text-base font-bold sm:text-lg">
+                            {formatTime(seconds)}
+                          </span>
+                        </div>
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Submit Button */}
+                <Button
+                  onClick={() => setShowSubmitDialog(true)}
+                  disabled={isSubmitting}
+                  variant="destructive"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : null}
+                  Submit
+                </Button>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Question Area */}
+              <div className="flex-1">
+                <Card className="mb-4">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="mb-6">
+                      <h2 className="text-lg sm:text-xl font-semibold mb-4">
+                        Question {currentQuestion?.questionNumber}
+                      </h2>
+
+                      {/* Answer Options */}
+                      {preset.inputType === "radio" ? (
+                        <div className="space-y-2 sm:space-y-3">
+                          {["A", "B", "C", "D", "E"].map((option) => (
+                            <div
+                              key={option}
+                              onClick={() => selectAnswer(option)}
+                              className={cn(
+                                "flex items-center space-x-3 rounded-lg border-2 p-3 sm:p-4 cursor-pointer transition-all",
+                                currentQuestion?.selectedAnswer === option
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border hover:border-primary/50"
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "flex size-5 sm:size-6 items-center justify-center rounded-full border-2",
+                                  currentQuestion?.selectedAnswer === option
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-muted-foreground"
+                                )}
+                              >
+                                {currentQuestion?.selectedAnswer === option && (
+                                  <div className="size-2.5 sm:size-3 rounded-full bg-primary-foreground" />
+                                )}
+                              </div>
+                              <span className="text-sm sm:text-base font-medium">
+                                {option}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <Input
+                          value={currentQuestion?.selectedAnswer || ""}
+                          onChange={(e) => setTextAnswer(e.target.value)}
+                          placeholder="Enter your answer"
+                          className="text-base sm:text-lg"
+                        />
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-4 pt-4 border-t">
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={markForReview}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        >
+                          {currentQuestion?.markedForReview ? "Unmark" : "Mark"}
+                        </Button>
+                        <Button
+                          onClick={clearResponse}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={goToPrevious}
+                          disabled={currentQuestionIndex === 0}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        >
+                          <ChevronLeft className="mr-1 size-3 sm:size-4" />
+                          <span className="hidden sm:inline">Previous</span>
+                          <span className="sm:hidden">Prev</span>
+                        </Button>
+                        <Button
+                          onClick={saveAndNext}
+                          disabled={
+                            currentQuestionIndex === preset.totalQuestions - 1
+                          }
+                          size="sm"
+                          className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        >
+                          <span className="hidden sm:inline">Save & Next</span>
+                          <span className="sm:hidden">Next</span>
+                          <ChevronRight className="ml-1 size-3 sm:size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Question Palette Sidebar */}
+              <div className="lg:w-80 border-t lg:border-t-0 lg:border-l bg-card p-4 sm:p-6">
+                <div className="lg:sticky lg:top-24">
+                  <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4">
+                    Question Palette
+                  </h3>
+
+                  {/* Legend */}
+                  <div className="mb-4 sm:mb-6 space-y-2 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="size-6 sm:size-8 rounded bg-green-500" />
+                      <span>Answered ({answeredCount})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="size-6 sm:size-8 rounded bg-orange-500" />
+                      <span>Marked ({markedCount})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="size-6 sm:size-8 rounded bg-muted" />
+                      <span>Not Answered ({notAnsweredCount})</span>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Submit Button */}
-              <Button
-                onClick={() => setShowSubmitDialog(true)}
-                disabled={isSubmitting}
-                variant="destructive"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : null}
-                Submit
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <div className="flex">
-          {/* Question Area */}
-          <div className="flex-1 p-6">
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold mb-4">
-                    Question {currentQuestion?.questionNumber}
-                  </h2>
-
-                  {/* Answer Options */}
-                  {preset.inputType === "radio" ? (
-                    <div className="space-y-3">
-                      {["A", "B", "C", "D", "E"].map((option) => (
-                        <div
-                          key={option}
-                          onClick={() => selectAnswer(option)}
+                  {/* Question Numbers Grid */}
+                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2">
+                    {answers.map((answer, index) => {
+                      const status = getQuestionStatus(answer);
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => goToQuestion(index)}
                           className={cn(
-                            "flex items-center space-x-3 rounded-lg border-2 p-4 cursor-pointer transition-all",
-                            currentQuestion?.selectedAnswer === option
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/50"
+                            "size-10 sm:size-12 rounded text-sm sm:text-base font-semibold transition-all",
+                            currentQuestionIndex === index &&
+                              "ring-2 ring-primary ring-offset-2",
+                            status === "answered" &&
+                              "bg-green-500 text-white hover:bg-green-600",
+                            status === "marked" &&
+                              "bg-orange-500 text-white hover:bg-orange-600",
+                            status === "marked-answered" &&
+                              "bg-purple-500 text-white hover:bg-purple-600",
+                            status === "not-answered" &&
+                              "bg-muted hover:bg-muted/80"
                           )}
                         >
-                          <div
-                            className={cn(
-                              "flex size-6 items-center justify-center rounded-full border-2",
-                              currentQuestion?.selectedAnswer === option
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-muted-foreground"
-                            )}
-                          >
-                            {currentQuestion?.selectedAnswer === option && (
-                              <div className="size-3 rounded-full bg-primary-foreground" />
-                            )}
-                          </div>
-                          <span className="font-medium">{option}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Input
-                      value={currentQuestion?.selectedAnswer || ""}
-                      onChange={(e) => setTextAnswer(e.target.value)}
-                      placeholder="Enter your answer"
-                      className="text-lg"
-                    />
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="flex gap-2">
-                    <Button onClick={markForReview} variant="outline">
-                      {currentQuestion?.markedForReview
-                        ? "Unmark"
-                        : "Mark for Review"}
-                    </Button>
-                    <Button onClick={clearResponse} variant="outline">
-                      Clear Response
-                    </Button>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={goToPrevious}
-                      disabled={currentQuestionIndex === 0}
-                      variant="outline"
-                    >
-                      <ChevronLeft className="mr-1 size-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      onClick={saveAndNext}
-                      disabled={
-                        currentQuestionIndex === preset.totalQuestions - 1
-                      }
-                    >
-                      Save & Next
-                      <ChevronRight className="ml-1 size-4" />
-                    </Button>
+                          {answer.questionNumber}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Question Palette Sidebar */}
-          <div className="w-80 border-l bg-card p-6">
-            <div className="sticky top-24">
-              <h3 className="font-semibold mb-4">Question Palette</h3>
-
-              {/* Legend */}
-              <div className="mb-6 space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded bg-green-500" />
-                  <span>Answered ({answeredCount})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded bg-orange-500" />
-                  <span>Marked ({markedCount})</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded bg-muted" />
-                  <span>Not Answered ({notAnsweredCount})</span>
-                </div>
-              </div>
-
-              {/* Question Numbers Grid */}
-              <div className="grid grid-cols-4 gap-2">
-                {answers.map((answer, index) => {
-                  const status = getQuestionStatus(answer);
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => goToQuestion(index)}
-                      className={cn(
-                        "size-12 rounded font-semibold transition-all",
-                        currentQuestionIndex === index &&
-                          "ring-2 ring-primary ring-offset-2",
-                        status === "answered" &&
-                          "bg-green-500 text-white hover:bg-green-600",
-                        status === "marked" &&
-                          "bg-orange-500 text-white hover:bg-orange-600",
-                        status === "marked-answered" &&
-                          "bg-purple-500 text-white hover:bg-purple-600",
-                        status === "not-answered" &&
-                          "bg-muted hover:bg-muted/80"
-                      )}
-                    >
-                      {answer.questionNumber}
-                    </button>
-                  );
-                })}
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Submit Confirmation Dialog */}
