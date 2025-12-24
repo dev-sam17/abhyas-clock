@@ -31,15 +31,23 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const session = await authClient.getSession();
-      if (!session?.data) {
+      try {
+        const session = await authClient.getSession();
+        if (!session?.data) {
+          router.push("/");
+          return;
+        }
+        setUser(session.data.user);
+        setLoading(false);
+      } catch (error) {
+        console.error("Auth check failed:", error);
         router.push("/");
-        return;
       }
-      setUser(session.data.user);
-      setLoading(false);
     };
-    checkAuth();
+
+    if (typeof window !== "undefined") {
+      checkAuth();
+    }
   }, [router]);
 
   const handleSignOut = async () => {
