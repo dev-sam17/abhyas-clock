@@ -1,10 +1,12 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,124 +14,296 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { toast } from "sonner"
-import { Clock, Timer, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Clock, Timer, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type TestPreset = {
-  id: number
-  name: string
-  totalQuestions: number
-  startingQuestion: number
-  inputType: string
-  testMode: string
-  timeLimitMinutes: number | null
-  allowOvertime: boolean
-}
+  id: number;
+  name: string;
+  totalQuestions: number;
+  startingQuestion: number;
+  inputType: string;
+  testMode: string;
+  timeLimitMinutes: number | null;
+  allowOvertime: boolean;
+};
 
 type Answer = {
-  questionNumber: number
-  selectedAnswer: string | null
-}
+  questionNumber: number;
+  selectedAnswer: string | null;
+  timeSpentSeconds?: number;
+  markedForReview?: boolean;
+};
 
 export function OMRInterface({ preset }: { preset: TestPreset }) {
-  const router = useRouter()
-  const [answers, setAnswers] = useState<Answer[]>([])
-  const [seconds, setSeconds] = useState(0)
-  const [isRunning, setIsRunning] = useState(true)
-  const [isOvertime, setIsOvertime] = useState(false)
-  const [showSubmitDialog, setShowSubmitDialog] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [attemptId, setAttemptId] = useState<number | null>(null)
-  const [startTime] = useState(Date.now())
+  const router = useRouter();
+  const [testStarted, setTestStarted] = useState(false);
+  const [showDisclaimerDialog, setShowDisclaimerDialog] = useState(true);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isOvertime, setIsOvertime] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [questionTimes, setQuestionTimes] = useState<Map<number, number>>(
+    new Map()
+  );
+  const [currentQuestionStartTime, setCurrentQuestionStartTime] =
+    useState<number>(Date.now());
 
+  // Load persisted state from sessionStorage
   useEffect(() => {
-    const initialAnswers: Answer[] = []
+    const savedState = sessionStorage.getItem(`test-${preset.id}`);
+    if (savedState) {
+      try {
+        const {
+          seconds: savedSeconds,
+          answers: savedAnswers,
+          questionTimes: savedTimes,
+        } = JSON.parse(savedState);
+        setSeconds(savedSeconds);
+        if (savedAnswers) setAnswers(savedAnswers);
+        if (savedTimes)
+          setQuestionTimes(
+            new Map(
+              Object.entries(savedTimes).map(([k, v]) => [
+                Number(k),
+                v as number,
+              ])
+            )
+          );
+        setTestStarted(true);
+        setShowDisclaimerDialog(false);
+        setIsRunning(true);
+      } catch (e) {
+        console.error("Failed to restore test state", e);
+      }
+    }
+  }, [preset.id]);
+
+  // Persist state to sessionStorage
+  useEffect(() => {
+    if (testStarted) {
+      const state = {
+        seconds,
+        answers,
+        questionTimes: Object.fromEntries(questionTimes),
+      };
+      sessionStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
+    }
+  }, [seconds, answers, questionTimes, testStarted, preset.id]);
+
+  // Disable right-click and browser navigation during test
+  useEffect(() => {
+    if (!testStarted) return;
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      history.pushState(null, "", window.location.href);
+      toast.warning("Please use the submit button to exit the test.");
+    };
+
+    // Push state to prevent back navigation
+    history.pushState(null, "", window.location.href);
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [testStarted]);
+
+  // Initialize answers
+  useEffect(() => {
+    const initialAnswers: Answer[] = [];
     for (let i = 0; i < preset.totalQuestions; i++) {
       initialAnswers.push({
         questionNumber: preset.startingQuestion + i,
         selectedAnswer: null,
-      })
+        markedForReview: false,
+      });
     }
-    setAnswers(initialAnswers)
-  }, [preset.totalQuestions, preset.startingQuestion])
+    setAnswers(initialAnswers);
+  }, [preset.totalQuestions, preset.startingQuestion]);
 
   // Timer/Stopwatch logic
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning) return;
 
     const interval = setInterval(() => {
       setSeconds((prev) => {
-        const newSeconds = prev + 1
+        const newSeconds = prev + 1;
 
-        // Check for overtime in timer mode
         if (preset.testMode === "timer" && preset.timeLimitMinutes) {
-          const timeLimit = preset.timeLimitMinutes * 60
+          const timeLimit = preset.timeLimitMinutes * 60;
           if (newSeconds >= timeLimit && !isOvertime) {
-            setIsOvertime(true)
+            setIsOvertime(true);
             if (!preset.allowOvertime) {
-              setIsRunning(false)
-              toast.warning("Time's up! Please submit your answers.")
+              setIsRunning(false);
+              toast.warning("Time's up! Auto-submitting your answers...");
+              // Auto-submit after a short delay
+              setTimeout(() => {
+                handleSubmit();
+              }, 2000);
             } else {
-              toast.info("Time limit reached. Now in overtime mode.")
+              toast.info("Time limit reached. Now in overtime mode.");
             }
           }
         }
 
-        return newSeconds
-      })
-    }, 1000)
+        return newSeconds;
+      });
+    }, 1000);
 
-    return () => clearInterval(interval)
-  }, [isRunning, preset.testMode, preset.timeLimitMinutes, preset.allowOvertime, isOvertime])
+    return () => clearInterval(interval);
+  }, [
+    isRunning,
+    preset.testMode,
+    preset.timeLimitMinutes,
+    preset.allowOvertime,
+    isOvertime,
+  ]);
 
   const formatTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const secs = totalSeconds % 60
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const getTimeRemaining = () => {
-    if (preset.testMode === "stopwatch" || !preset.timeLimitMinutes) return null
-    const timeLimit = preset.timeLimitMinutes * 60
-    const remaining = timeLimit - seconds
-    return remaining > 0 ? remaining : 0
-  }
+    if (preset.testMode === "stopwatch" || !preset.timeLimitMinutes)
+      return null;
+    const timeLimit = preset.timeLimitMinutes * 60;
+    const remaining = timeLimit - seconds;
+    return remaining > 0 ? remaining : 0;
+  };
 
-  const selectAnswer = (questionNumber: number, option: string) => {
-    setAnswers((prev) =>
-      prev.map((ans) =>
-        ans.questionNumber === questionNumber
-          ? { ...ans, selectedAnswer: ans.selectedAnswer === option ? null : option }
-          : ans,
-      ),
-    )
-  }
+  const trackQuestionTime = (questionNumber: number) => {
+    const now = Date.now();
+    const timeSpent = Math.floor((now - currentQuestionStartTime) / 1000);
 
-  const setTextAnswer = (questionNumber: number, text: string) => {
+    setQuestionTimes((prev) => {
+      const newMap = new Map(prev);
+      const existingTime = newMap.get(questionNumber) || 0;
+      newMap.set(questionNumber, existingTime + timeSpent);
+      return newMap;
+    });
+
+    setCurrentQuestionStartTime(now);
+  };
+
+  const currentQuestion = answers[currentQuestionIndex];
+
+  const selectAnswer = (option: string) => {
+    if (!currentQuestion) return;
+
     setAnswers((prev) =>
-      prev.map((ans) =>
-        ans.questionNumber === questionNumber ? { ...ans, selectedAnswer: text.trim() || null } : ans,
-      ),
-    )
-  }
+      prev.map((ans, idx) =>
+        idx === currentQuestionIndex
+          ? {
+              ...ans,
+              selectedAnswer: ans.selectedAnswer === option ? null : option,
+            }
+          : ans
+      )
+    );
+  };
+
+  const setTextAnswer = (text: string) => {
+    if (!currentQuestion) return;
+
+    setAnswers((prev) =>
+      prev.map((ans, idx) =>
+        idx === currentQuestionIndex
+          ? { ...ans, selectedAnswer: text.trim() || null }
+          : ans
+      )
+    );
+  };
+
+  const clearResponse = () => {
+    setAnswers((prev) =>
+      prev.map((ans, idx) =>
+        idx === currentQuestionIndex ? { ...ans, selectedAnswer: null } : ans
+      )
+    );
+    toast.success("Response cleared");
+  };
+
+  const markForReview = () => {
+    setAnswers((prev) =>
+      prev.map((ans, idx) =>
+        idx === currentQuestionIndex
+          ? { ...ans, markedForReview: !ans.markedForReview }
+          : ans
+      )
+    );
+  };
+
+  const saveAndNext = () => {
+    if (currentQuestion) {
+      trackQuestionTime(currentQuestion.questionNumber);
+    }
+    if (currentQuestionIndex < preset.totalQuestions - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentQuestion) {
+      trackQuestionTime(currentQuestion.questionNumber);
+    }
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const goToQuestion = (index: number) => {
+    if (currentQuestion) {
+      trackQuestionTime(currentQuestion.questionNumber);
+    }
+    setCurrentQuestionIndex(index);
+  };
 
   const handleSubmit = async () => {
-    setShowSubmitDialog(false)
-    setIsSubmitting(true)
-    setIsRunning(false)
+    setShowSubmitDialog(false);
+    setIsSubmitting(true);
+    setIsRunning(false);
+
+    if (currentQuestion) {
+      trackQuestionTime(currentQuestion.questionNumber);
+    }
 
     try {
-      // Calculate overtime if applicable
-      let overtimeSeconds = 0
-      if (preset.testMode === "timer" && preset.timeLimitMinutes && isOvertime) {
-        const timeLimit = preset.timeLimitMinutes * 60
-        overtimeSeconds = Math.max(0, seconds - timeLimit)
+      let overtimeSeconds = 0;
+      if (
+        preset.testMode === "timer" &&
+        preset.timeLimitMinutes &&
+        isOvertime
+      ) {
+        const timeLimit = preset.timeLimitMinutes * 60;
+        overtimeSeconds = Math.max(0, seconds - timeLimit);
       }
 
-      // Create test attempt
       const response = await fetch("/api/attempts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -141,55 +315,152 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
           answers: answers.map((ans) => ({
             questionNumber: ans.questionNumber,
             selectedAnswer: ans.selectedAnswer,
+            timeSpentSeconds: questionTimes.get(ans.questionNumber) || 0,
           })),
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to submit answers")
+        throw new Error("Failed to submit answers");
       }
 
-      const data = await response.json()
-      toast.success("Answers submitted successfully!")
-      router.push(`/enter-key/${data.attemptId}`)
+      const data = await response.json();
+      // Clear saved state after successful submission
+      sessionStorage.removeItem(`test-${preset.id}`);
+      toast.success("Answers submitted successfully!");
+      router.replace(`/enter-key/${data.attemptId}`);
     } catch (error) {
-      console.error("[v0] Error submitting answers:", error)
-      toast.error("Failed to submit answers. Please try again.")
-      setIsSubmitting(false)
-      setIsRunning(true)
+      console.error("Error submitting answers:", error);
+      toast.error("Failed to submit answers. Please try again.");
+      setIsSubmitting(false);
+      setIsRunning(true);
     }
+  };
+
+  const getQuestionStatus = (answer: Answer) => {
+    if (answer.markedForReview && answer.selectedAnswer) {
+      return "marked-answered";
+    }
+    if (answer.markedForReview) {
+      return "marked";
+    }
+    if (answer.selectedAnswer) {
+      return "answered";
+    }
+    return "not-answered";
+  };
+
+  const answeredCount = answers.filter(
+    (ans) => ans.selectedAnswer !== null
+  ).length;
+  const markedCount = answers.filter((ans) => ans.markedForReview).length;
+  const notAnsweredCount = preset.totalQuestions - answeredCount;
+
+  const timeRemaining = getTimeRemaining();
+  const isTimerMode = preset.testMode === "timer";
+
+  const handleStartTest = () => {
+    setTestStarted(true);
+    setShowDisclaimerDialog(false);
+    setIsRunning(true);
+    setCurrentQuestionStartTime(Date.now());
+  };
+
+  // Show disclaimer before test starts
+  if (!testStarted) {
+    return (
+      <Dialog open={showDisclaimerDialog} onOpenChange={() => {}}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              Test Instructions & Disclaimer
+            </DialogTitle>
+            <DialogDescription className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-foreground">
+                  Important Guidelines:
+                </h4>
+                <ul className="list-disc space-y-1 pl-5 text-sm">
+                  <li>
+                    Once you start the test, browser navigation buttons will be
+                    disabled
+                  </li>
+                  <li>
+                    You cannot use the back/forward buttons to exit the test
+                  </li>
+                  <li>
+                    Right-click is disabled during the test to prevent cheating
+                  </li>
+                  <li>
+                    Refreshing the page will not reset your timer - your
+                    progress is saved
+                  </li>
+                  {preset.testMode === "timer" && preset.timeLimitMinutes && (
+                    <li className="font-semibold text-orange-600 dark:text-orange-400">
+                      Time Limit: {preset.timeLimitMinutes} minutes
+                      {!preset.allowOvertime &&
+                        " (Test will auto-submit when time runs out)"}
+                    </li>
+                  )}
+                  <li>
+                    Use the "Submit Test" button to complete and exit the test
+                  </li>
+                  <li>
+                    A confirmation prompt will appear if you try to leave the
+                    page
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+                <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+                  ⚠️ By starting this test, you acknowledge that you understand
+                  these restrictions and agree to complete the test using only
+                  the submit button.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => router.back()}>
+              Cancel
+            </Button>
+            <Button onClick={handleStartTest}>I Understand, Start Test</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   }
-
-  const answeredCount = answers.filter((ans) => ans.selectedAnswer !== null).length
-  const unansweredCount = preset.totalQuestions - answeredCount
-
-  const timeRemaining = getTimeRemaining()
-  const isTimerMode = preset.testMode === "timer"
 
   return (
     <>
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4">
-          <div className="flex items-center justify-between">
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4">
             <div>
-              <h1 className="text-xl font-bold text-foreground">{preset.name}</h1>
-              <p className="text-sm text-muted-foreground">{preset.totalQuestions} Questions</p>
+              <h1 className="text-lg font-bold">{preset.name}</h1>
+              <p className="text-sm text-muted-foreground">
+                Question No. {currentQuestion?.questionNumber}
+              </p>
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Timer/Stopwatch Display */}
+              {/* Timer Display */}
               <Card className="border-2">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2">
-                    {isTimerMode ? <Timer className="size-5" /> : <Clock className="size-5" />}
+                    {isTimerMode ? (
+                      <Timer className="size-5" />
+                    ) : (
+                      <Clock className="size-5" />
+                    )}
                     <div className="text-center">
                       {isTimerMode && timeRemaining !== null ? (
                         <>
                           <div
                             className={cn(
-                              "text-2xl font-mono font-bold tabular-nums",
-                              isOvertime && "text-destructive",
+                              "text-xl font-mono font-bold",
+                              isOvertime && "text-destructive"
                             )}
                           >
                             {formatTime(timeRemaining)}
@@ -202,8 +473,12 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                         </>
                       ) : (
                         <>
-                          <div className="text-2xl font-mono font-bold tabular-nums">{formatTime(seconds)}</div>
-                          <div className="text-xs text-muted-foreground">elapsed</div>
+                          <div className="text-xl font-mono font-bold">
+                            {formatTime(seconds)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            elapsed
+                          </div>
                         </>
                       )}
                     </div>
@@ -212,136 +487,160 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
               </Card>
 
               {/* Submit Button */}
-              <Button onClick={() => setShowSubmitDialog(true)} size="lg" disabled={isSubmitting}>
+              <Button
+                onClick={() => setShowSubmitDialog(true)}
+                disabled={isSubmitting}
+                variant="destructive"
+              >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Test"
-                )}
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : null}
+                Submit
               </Button>
             </div>
           </div>
+        </header>
 
-          {/* Progress Bar */}
-          <div className="mt-4 flex items-center gap-4">
-            <div className="flex-1">
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${(answeredCount / preset.totalQuestions) * 100}%` }}
-                />
+        {/* Main Content */}
+        <div className="flex">
+          {/* Question Area */}
+          <div className="flex-1 p-6">
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Question {currentQuestion?.questionNumber}
+                  </h2>
+
+                  {/* Answer Options */}
+                  {preset.inputType === "radio" ? (
+                    <div className="space-y-3">
+                      {["A", "B", "C", "D", "E"].map((option) => (
+                        <div
+                          key={option}
+                          onClick={() => selectAnswer(option)}
+                          className={cn(
+                            "flex items-center space-x-3 rounded-lg border-2 p-4 cursor-pointer transition-all",
+                            currentQuestion?.selectedAnswer === option
+                              ? "border-primary bg-primary/10"
+                              : "border-border hover:border-primary/50"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "flex size-6 items-center justify-center rounded-full border-2",
+                              currentQuestion?.selectedAnswer === option
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-muted-foreground"
+                            )}
+                          >
+                            {currentQuestion?.selectedAnswer === option && (
+                              <div className="size-3 rounded-full bg-primary-foreground" />
+                            )}
+                          </div>
+                          <span className="font-medium">{option}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Input
+                      value={currentQuestion?.selectedAnswer || ""}
+                      onChange={(e) => setTextAnswer(e.target.value)}
+                      placeholder="Enter your answer"
+                      className="text-lg"
+                    />
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex gap-2">
+                    <Button onClick={markForReview} variant="outline">
+                      {currentQuestion?.markedForReview
+                        ? "Unmark"
+                        : "Mark for Review"}
+                    </Button>
+                    <Button onClick={clearResponse} variant="outline">
+                      Clear Response
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={goToPrevious}
+                      disabled={currentQuestionIndex === 0}
+                      variant="outline"
+                    >
+                      <ChevronLeft className="mr-1 size-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      onClick={saveAndNext}
+                      disabled={
+                        currentQuestionIndex === preset.totalQuestions - 1
+                      }
+                    >
+                      Save & Next
+                      <ChevronRight className="ml-1 size-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Question Palette Sidebar */}
+          <div className="w-80 border-l bg-card p-6">
+            <div className="sticky top-24">
+              <h3 className="font-semibold mb-4">Question Palette</h3>
+
+              {/* Legend */}
+              <div className="mb-6 space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded bg-green-500" />
+                  <span>Answered ({answeredCount})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded bg-orange-500" />
+                  <span>Marked ({markedCount})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded bg-muted" />
+                  <span>Not Answered ({notAnsweredCount})</span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <Badge variant="default" className="gap-1">
-                <CheckCircle2 className="size-3" />
-                {answeredCount} Answered
-              </Badge>
-              <Badge variant="secondary" className="gap-1">
-                <AlertCircle className="size-3" />
-                {unansweredCount} Unanswered
-              </Badge>
+
+              {/* Question Numbers Grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {answers.map((answer, index) => {
+                  const status = getQuestionStatus(answer);
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => goToQuestion(index)}
+                      className={cn(
+                        "size-12 rounded font-semibold transition-all",
+                        currentQuestionIndex === index &&
+                          "ring-2 ring-primary ring-offset-2",
+                        status === "answered" &&
+                          "bg-green-500 text-white hover:bg-green-600",
+                        status === "marked" &&
+                          "bg-orange-500 text-white hover:bg-orange-600",
+                        status === "marked-answered" &&
+                          "bg-purple-500 text-white hover:bg-purple-600",
+                        status === "not-answered" &&
+                          "bg-muted hover:bg-muted/80"
+                      )}
+                    >
+                      {answer.questionNumber}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </header>
-
-      {/* OMR Sheet */}
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Answer Sheet</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {preset.inputType === "radio"
-                ? "Click on an option to mark your answer. Click again to unmark."
-                : "Type your answer for each question. Leave blank if unanswered."}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              {answers.map((answer) => (
-                <div
-                  key={answer.questionNumber}
-                  className="flex items-center gap-4 rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  {/* Question Number */}
-                  <div className="flex size-12 items-center justify-center rounded-lg bg-muted font-bold text-foreground shrink-0">
-                    {answer.questionNumber}
-                  </div>
-
-                  {preset.inputType === "radio" ? (
-                    /* Radio Button Options */
-                    <>
-                      <div className="flex flex-1 gap-2">
-                        {["A", "B", "C", "D", "E"].map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => selectAnswer(answer.questionNumber, option)}
-                            className={cn(
-                              "flex size-12 items-center justify-center rounded-lg border-2 font-semibold transition-all hover:scale-105",
-                              answer.selectedAnswer === option
-                                ? "border-primary bg-primary text-primary-foreground shadow-lg scale-105"
-                                : "border-border bg-background text-foreground hover:border-primary/50",
-                            )}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Status Indicator */}
-                      <div className="shrink-0 w-20 text-right">
-                        {answer.selectedAnswer ? (
-                          <Badge variant="default" className="gap-1">
-                            <CheckCircle2 className="size-3" />
-                            {answer.selectedAnswer}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <AlertCircle className="size-3" />
-                            Empty
-                          </Badge>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    /* Text Input */
-                    <>
-                      <div className="flex-1">
-                        <Input
-                          placeholder="Type your answer here..."
-                          value={answer.selectedAnswer || ""}
-                          onChange={(e) => setTextAnswer(answer.questionNumber, e.target.value)}
-                          className="h-12 text-base"
-                        />
-                      </div>
-
-                      {/* Status Indicator */}
-                      <div className="shrink-0 w-24 text-right">
-                        {answer.selectedAnswer ? (
-                          <Badge variant="default" className="gap-1">
-                            <CheckCircle2 className="size-3" />
-                            Filled
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <AlertCircle className="size-3" />
-                            Empty
-                          </Badge>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+      </div>
 
       {/* Submit Confirmation Dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
@@ -349,23 +648,28 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
           <DialogHeader>
             <DialogTitle>Submit Test?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to submit your answers? You have answered {answeredCount} out of{" "}
-              {preset.totalQuestions} questions.
-              {unansweredCount > 0 && (
-                <span className="block mt-2 text-destructive font-medium">
-                  Warning: {unansweredCount} question{unansweredCount !== 1 ? "s" : ""} left unanswered!
-                </span>
-              )}
+              You have answered {answeredCount} out of {preset.totalQuestions}{" "}
+              questions.
+              {notAnsweredCount > 0 &&
+                ` ${notAnsweredCount} questions are not answered.`}
+              {markedCount > 0 &&
+                ` ${markedCount} questions are marked for review.`}
+              <br />
+              <br />
+              Are you sure you want to submit your test?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowSubmitDialog(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Confirm Submit</Button>
+            <Button onClick={handleSubmit}>Submit Test</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

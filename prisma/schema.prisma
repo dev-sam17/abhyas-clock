@@ -12,18 +12,25 @@ datasource db {
 // Test Preset - Just metadata (name, question count, time limit, mode)
 
 model TestPreset {
-  id               Int           @id @default(autoincrement())
-  name             String        @db.VarChar(255)
-  totalQuestions   Int           @map("total_questions")
-  startingQuestion Int           @default(1) @map("starting_question")
-  inputType        String        @default("radio") @map("input_type") @db.VarChar(10) // "radio" or "text"
-  testMode         String        @map("test_mode") @db.VarChar(20) // "timer" or "stopwatch"
-  timeLimitMinutes Int?          @map("time_limit_minutes") // Only for timer mode
-  allowOvertime    Boolean       @default(false) @map("allow_overtime") // Only for timer mode
-  createdAt        DateTime      @default(now()) @map("created_at")
+  id               Int              @id @default(autoincrement())
+  name             String           @db.VarChar(255)
+  totalQuestions   Int              @map("total_questions")
+  startingQuestion Int              @default(1) @map("starting_question")
+  inputType        String           @default("radio") @map("input_type") @db.VarChar(10) // "radio" or "text"
+  testMode         String           @map("test_mode") @db.VarChar(20) // "timer" or "stopwatch"
+  timeLimitMinutes Int?             @map("time_limit_minutes") // Only for timer mode
+  allowOvertime    Boolean          @default(false) @map("allow_overtime") // Only for timer mode
+  isPublic         Boolean          @default(false) @map("is_public")
+  userId           String           @map("user_id")
+  collectionId     Int?             @map("collection_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection       Collection?      @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   presetAnswerKey  PresetAnswerKey?
   attempts         TestAttempt[]
 
+  @@index([userId])
+  @@index([collectionId])
   @@map("test_presets")
 }
 
@@ -32,6 +39,7 @@ model TestPreset {
 model TestAttempt {
   id               Int        @id @default(autoincrement())
   presetId         Int        @map("preset_id")
+  userId           String     @map("user_id")
   startedAt        DateTime   @default(now()) @map("started_at")
   completedAt      DateTime?  @map("completed_at")
   timeTakenSeconds Int?       @map("time_taken_seconds")
@@ -43,39 +51,29 @@ model TestAttempt {
   unanswered       Int?
   percentage       Decimal?   @db.Decimal(5, 2)
   preset           TestPreset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers          Answer[]
-  answerKey        AnswerKey?
 
   @@index([presetId])
+  @@index([userId])
   @@map("test_attempts")
 }
 
 // Answer - Student's submitted answer for each question
 
 model Answer {
-  id             Int         @id @default(autoincrement())
-  attemptId      Int         @map("attempt_id")
-  questionNumber Int         @map("question_number")
-  selectedAnswer String?     @map("selected_answer") @db.VarChar(255) // A-E for radio, any text for text type
-  isCorrect      Boolean?    @map("is_correct") // Calculated after answer key entry
-  answeredAt     DateTime    @default(now()) @map("answered_at")
-  attempt        TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  id               Int         @id @default(autoincrement())
+  attemptId        Int         @map("attempt_id")
+  questionNumber   Int         @map("question_number")
+  selectedAnswer   String?     @map("selected_answer") @db.VarChar(255) // A-E for radio, any text for text type
+  isCorrect        Boolean?    @map("is_correct") // Calculated after answer key entry
+  timeSpentSeconds Int?        @map("time_spent_seconds")
+  answeredAt       DateTime    @default(now()) @map("answered_at")
+  attempt          TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionNumber])
   @@index([attemptId])
   @@map("answers")
-}
-
-// Answer Key - Correct answers entered after test completion
-
-model AnswerKey {
-  id             Int         @id @default(autoincrement())
-  attemptId      Int         @unique @map("attempt_id")
-  correctAnswers Json        @map("correct_answers") // JSON array: ["A", "B", "C", ...]
-  enteredAt      DateTime    @default(now()) @map("entered_at")
-  attempt        TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-
-  @@map("answer_keys")
 }
 
 model PresetAnswerKey {
@@ -90,15 +88,18 @@ model PresetAnswerKey {
 }
 
 model User {
-  id            String    @id
+  id            String        @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   sessions      Session[]
   accounts      Account[]
+  presets       TestPreset[]
+  attempts      TestAttempt[]
+  collections   Collection[]
 
   @@unique([email])
   @@map("user")
@@ -150,4 +151,19 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Collection {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  isPublic    Boolean      @default(false) @map("is_public")
+  userId      String       @map("user_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  presets     TestPreset[]
+
+  @@index([userId])
+  @@map("collections")
 }
