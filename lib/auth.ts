@@ -7,6 +7,10 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL || "",
+    "https://abhyasclock.vercel.app",
+  ].filter(Boolean),
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
