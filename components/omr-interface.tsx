@@ -375,51 +375,50 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
             <DialogTitle className="text-2xl">
               Test Instructions & Disclaimer
             </DialogTitle>
-            <DialogDescription className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">
-                  Important Guidelines:
-                </h4>
-                <ul className="list-disc space-y-1 pl-5 text-sm">
-                  <li>
-                    Once you start the test, browser navigation buttons will be
-                    disabled
-                  </li>
-                  <li>
-                    You cannot use the back/forward buttons to exit the test
-                  </li>
-                  <li>
-                    Right-click is disabled during the test to prevent cheating
-                  </li>
-                  <li>
-                    Refreshing the page will not reset your timer - your
-                    progress is saved
-                  </li>
-                  {preset.testMode === "timer" && preset.timeLimitMinutes && (
-                    <li className="font-semibold text-orange-600 dark:text-orange-400">
-                      Time Limit: {preset.timeLimitMinutes} minutes
-                      {!preset.allowOvertime &&
-                        " (Test will auto-submit when time runs out)"}
-                    </li>
-                  )}
-                  <li>
-                    Use the "Submit Test" button to complete and exit the test
-                  </li>
-                  <li>
-                    A confirmation prompt will appear if you try to leave the
-                    page
-                  </li>
-                </ul>
-              </div>
-              <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
-                <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                  ⚠️ By starting this test, you acknowledge that you understand
-                  these restrictions and agree to complete the test using only
-                  the submit button.
-                </p>
-              </div>
-            </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <h4 className="font-semibold text-foreground">
+                Important Guidelines:
+              </h4>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                <li>
+                  Once you start the test, browser navigation buttons will be
+                  disabled
+                </li>
+                <li>
+                  You cannot use the back/forward buttons to exit the test
+                </li>
+                <li>
+                  Right-click is disabled during the test to prevent cheating
+                </li>
+                <li>
+                  Refreshing the page will not reset your timer - your progress
+                  is saved
+                </li>
+                {preset.testMode === "timer" && preset.timeLimitMinutes && (
+                  <li className="font-semibold text-orange-600 dark:text-orange-400">
+                    Time Limit: {preset.timeLimitMinutes} minutes
+                    {!preset.allowOvertime &&
+                      " (Test will auto-submit when time runs out)"}
+                  </li>
+                )}
+                <li>
+                  Use the "Submit Test" button to complete and exit the test
+                </li>
+                <li>
+                  A confirmation prompt will appear if you try to leave the page
+                </li>
+              </ul>
+            </div>
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+              <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+                ⚠️ By starting this test, you acknowledge that you understand
+                these restrictions and agree to complete the test using only the
+                submit button.
+              </p>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => router.back()}>
               Cancel
