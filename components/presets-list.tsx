@@ -202,7 +202,6 @@ export function PresetsList() {
         <div className="grid gap-6 md:grid-cols-2">
           {presets.map((preset) => {
             const isOwner = preset.userId === userId;
-            console.log({ presetID: preset.userId, userId });
             return (
               <Card
                 key={preset.id}

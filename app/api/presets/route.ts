@@ -25,7 +25,6 @@ export async function POST(request: Request) {
       collectionId,
     } = body;
 
-    console.log("[v0] Creating preset with data:", body);
 
     // Validation
     if (!name || !totalQuestions || !testMode || !inputType) {
@@ -82,7 +81,6 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log("[v0] Preset created successfully:", preset);
 
     return NextResponse.json(preset, { status: 201 });
   } catch (error) {

@@ -112,12 +112,10 @@ export function CreatePresetForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("[v0] Error response:", errorData);
         throw new Error(errorData.error || "Failed to create preset");
       }
 
       const data = await response.json();
-      console.log("[v0] Preset created successfully:", data);
       toast.success("Test preset created successfully!");
       router.push("/presets");
     } catch (error) {

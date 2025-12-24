@@ -10,7 +10,6 @@ export default async function TakeTestPage({
 }) {
   const presetId = Number.parseInt((await params).id);
 
-  console.log("Preset ID:", presetId);
 
   if (isNaN(presetId)) {
     notFound();
