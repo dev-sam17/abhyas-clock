@@ -1,14 +1,17 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { type NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { attemptId, correctAnswers } = body
+    const body = await request.json();
+    const { attemptId, correctAnswers } = body;
 
     // Validation
     if (!attemptId || !correctAnswers || !Array.isArray(correctAnswers)) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     // Get the attempt with answers
@@ -18,47 +21,52 @@ export async function POST(request: NextRequest) {
         answers: true,
         preset: true,
       },
-    })
+    });
 
     if (!attempt) {
-      return NextResponse.json({ error: "Attempt not found" }, { status: 404 })
+      return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
     }
 
     if (attempt.isEvaluated) {
-      return NextResponse.json({ error: "This attempt has already been evaluated" }, { status: 400 })
+      return NextResponse.json(
+        { error: "This attempt has already been evaluated" },
+        { status: 400 }
+      );
     }
 
     // Calculate results
-    let correct = 0
-    let incorrect = 0
-    let unanswered = 0
+    let correct = 0;
+    let incorrect = 0;
+    let unanswered = 0;
 
     const answerUpdates = attempt.answers.map((answer) => {
-      const correctAnswer = correctAnswers[answer.questionNumber - attempt.preset.startingQuestion]
-      const isCorrect = answer.selectedAnswer === correctAnswer
+      const correctAnswer =
+        correctAnswers[answer.questionNumber - attempt.preset.startingQuestion];
+      const isCorrect = answer.selectedAnswer === correctAnswer;
 
       if (answer.selectedAnswer === null) {
-        unanswered++
+        unanswered++;
         return {
           where: { id: answer.id },
           data: { isCorrect: false },
-        }
+        };
       } else if (isCorrect) {
-        correct++
+        correct++;
         return {
           where: { id: answer.id },
           data: { isCorrect: true },
-        }
+        };
       } else {
-        incorrect++
+        incorrect++;
         return {
           where: { id: answer.id },
           data: { isCorrect: false },
-        }
+        };
       }
-    })
+    });
 
-    const percentage = attempt.totalQuestions > 0 ? (correct / attempt.totalQuestions) * 100 : 0
+    const percentage =
+      attempt.totalQuestions > 0 ? (correct / attempt.totalQuestions) * 100 : 0;
 
     await prisma.$transaction([
       // Create/update preset-level answer key for future attempts
@@ -71,13 +79,6 @@ export async function POST(request: NextRequest) {
         update: {
           correctAnswers,
           updatedAt: new Date(),
-        },
-      }),
-      // Create answer key for this attempt (legacy support)
-      prisma.answerKey.create({
-        data: {
-          attemptId,
-          correctAnswers,
         },
       }),
       // Update attempt with results
@@ -96,9 +97,9 @@ export async function POST(request: NextRequest) {
         prisma.answer.update({
           where: update.where,
           data: update.data,
-        }),
+        })
       ),
-    ])
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -108,9 +109,12 @@ export async function POST(request: NextRequest) {
         unanswered,
         percentage: percentage.toFixed(2),
       },
-    })
+    });
   } catch (error) {
-    console.error("[v0] Error submitting answer key:", error)
-    return NextResponse.json({ error: "Failed to submit answer key" }, { status: 500 })
+    console.error("[v0] Error submitting answer key:", error);
+    return NextResponse.json(
+      { error: "Failed to submit answer key" },
+      { status: 500 }
+    );
   }
 }

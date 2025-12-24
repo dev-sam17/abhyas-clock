@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -29,6 +36,24 @@ export function CreatePresetForm() {
   const [testMode, setTestMode] = useState<"timer" | "stopwatch">("timer");
   const [timeLimitMinutes, setTimeLimitMinutes] = useState("");
   const [allowOvertime, setAllowOvertime] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [collectionId, setCollectionId] = useState<string>("");
+  const [collections, setCollections] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await fetch("/api/collections");
+        if (response.ok) {
+          const data = await response.json();
+          setCollections(data);
+        }
+      } catch (error) {
+        console.error("Error fetching collections:", error);
+      }
+    };
+    fetchCollections();
+  }, []);
 
   const calculateEndingQuestion = () => {
     const start = Number.parseInt(startingQuestion);
@@ -80,6 +105,8 @@ export function CreatePresetForm() {
           timeLimitMinutes:
             testMode === "timer" ? Number.parseInt(timeLimitMinutes) : null,
           allowOvertime: testMode === "timer" ? allowOvertime : false,
+          isPublic,
+          collectionId: collectionId ? parseInt(collectionId) : null,
         }),
       });
 
@@ -281,6 +308,45 @@ export function CreatePresetForm() {
               </div>
             </div>
           )}
+
+          {/* Public/Private Toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="isPublic">Public Preset</Label>
+              <p className="text-sm text-muted-foreground">
+                Make this preset available for all users to attempt
+              </p>
+            </div>
+            <Switch
+              id="isPublic"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
+            />
+          </div>
+
+          {/* Collection Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="collection">Collection (Optional)</Label>
+            <Select value={collectionId} onValueChange={setCollectionId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a collection" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Collection</SelectItem>
+                {collections.map((collection) => (
+                  <SelectItem
+                    key={collection.id}
+                    value={collection.id.toString()}
+                  >
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Organize presets into collections for better management
+            </p>
+          </div>
 
           {/* Submit Button */}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
