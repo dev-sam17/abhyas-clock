@@ -54,7 +54,18 @@ export function QuestionTimeAnalytics({
           {attempts.slice(0, 5).map((attempt) => (
             <div key={attempt.id} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold">{attempt.preset.name}</h4>
+                <div>
+                  <h4 className="font-semibold">{attempt.preset.name}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Avg:{" "}
+                    {formatTime(
+                      Math.round(
+                        attempt.timeTakenSeconds / attempt.answers.length
+                      )
+                    )}
+                    /question
+                  </p>
+                </div>
                 <Badge variant="outline">
                   <Clock className="mr-1 size-3" />
                   Total: {formatTime(attempt.timeTakenSeconds)}
