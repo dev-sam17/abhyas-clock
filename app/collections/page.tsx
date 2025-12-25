@@ -67,6 +67,7 @@ export default function CollectionsPage() {
   }, []);
 
   const fetchCollections = async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/collections");
       if (response.ok) {
@@ -111,6 +112,8 @@ export default function CollectionsPage() {
     } catch (error) {
       console.error("Error creating collection:", error);
       toast.error("Failed to create collection");
+    } finally {
+      fetchCollections();
     }
   };
 

@@ -43,12 +43,12 @@ self.addEventListener("fetch", (event) => {
           }
 
           // Only cache GET requests
-          if (event.request.method === "GET" && response.type === "basic") {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
+          // if (event.request.method === "GET" && response.type === "basic") {
+          //   const responseToCache = response.clone();
+          //   caches.open(CACHE_NAME).then((cache) => {
+          //     cache.put(event.request, responseToCache);
+          //   });
+          // }
           return response;
         })
         .catch((error) => {
