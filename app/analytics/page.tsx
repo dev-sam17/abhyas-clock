@@ -1,5 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/prisma";
 import { TrendingUp, Award, Clock, Target } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,137 +13,53 @@ import { BackButton } from "@/components/back-button";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
 
-async function getAnalytics() {
-  const attempts = await prisma.testAttempt.findMany({
-    where: {
-      isEvaluated: true,
-    },
-    include: {
-      preset: {
-        select: {
-          name: true,
-          startingQuestion: true,
-        },
-      },
-      answers: {
-        orderBy: { questionNumber: "asc" },
-      },
-    },
-    orderBy: {
-      completedAt: "desc",
-    },
-  });
+type AnalyticsData = {
+  totalAttempts: number;
+  averageScore: number;
+  totalTime: number;
+  bestScore: number;
+  averageTimePerQuestion: number;
+  attempts: any[];
+  questionStats: any[];
+  attemptsWithTimes: any[];
+};
 
-  if (attempts.length === 0) {
-    return {
-      totalAttempts: 0,
-      averageScore: 0,
-      totalTime: 0,
-      bestScore: 0,
-      averageTimePerQuestion: 0,
-      attempts: [],
-      questionStats: [],
-      attemptsWithTimes: [],
+export default function AnalyticsPage() {
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/analytics");
+        if (!res.ok) {
+          throw new Error("Failed to load analytics");
+        }
+        const data = (await res.json()) as AnalyticsData;
+        if (!cancelled) {
+          setAnalytics(data);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load analytics");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     };
-  }
 
-  const totalAttempts = attempts.length;
-  const averageScore =
-    attempts.reduce((sum, a) => sum + Number(a.percentage || 0), 0) /
-    totalAttempts;
-  const totalTime = attempts.reduce(
-    (sum, a) => sum + (a.timeTakenSeconds || 0),
-    0
-  );
-  const bestScore = Math.max(...attempts.map((a) => Number(a.percentage || 0)));
-
-  const totalQuestions = attempts.reduce((sum, a) => sum + a.totalQuestions, 0);
-  const averageTimePerQuestion =
-    totalQuestions > 0 ? Math.round(totalTime / totalQuestions) : 0;
-
-  const formattedAttempts = attempts.map((attempt) => ({
-    id: attempt.id,
-    preset_id: attempt.presetId,
-    test_id: attempt.presetId,
-    test_name: attempt.preset.name,
-    percentage: String(attempt.percentage || 0),
-    correct_answers: attempt.correctAnswers || 0,
-    incorrect_answers: attempt.incorrectAnswers || 0,
-    unanswered: attempt.unanswered || 0,
-    time_taken_seconds: attempt.timeTakenSeconds || 0,
-    total_questions: attempt.totalQuestions,
-    completed_at: attempt.completedAt,
-    preset_name: attempt.preset.name,
-  }));
-
-  const questionStatsMap = new Map<
-    number,
-    { correct: number; incorrect: number; unanswered: number; total: number }
-  >();
-
-  attempts.forEach((attempt) => {
-    attempt.answers.forEach((answer) => {
-      const qNum = answer.questionNumber;
-      if (!questionStatsMap.has(qNum)) {
-        questionStatsMap.set(qNum, {
-          correct: 0,
-          incorrect: 0,
-          unanswered: 0,
-          total: 0,
-        });
-      }
-      const stats = questionStatsMap.get(qNum)!;
-      stats.total++;
-
-      if (answer.selectedAnswer === null) {
-        stats.unanswered++;
-      } else if (answer.isCorrect) {
-        stats.correct++;
-      } else {
-        stats.incorrect++;
-      }
-    });
-  });
-
-  const questionStats = Array.from(questionStatsMap.entries())
-    .map(([questionNumber, stats]) => ({
-      questionNumber,
-      timesAttempted: stats.total,
-      timesCorrect: stats.correct,
-      timesIncorrect: stats.incorrect,
-      timesUnanswered: stats.unanswered,
-      accuracy: stats.total > 0 ? (stats.correct / stats.total) * 100 : 0,
-    }))
-    .sort((a, b) => a.questionNumber - b.questionNumber);
-
-  const attemptsWithTimes = attempts.map((attempt) => ({
-    id: attempt.id,
-    preset: {
-      name: attempt.preset.name,
-    },
-    answers: attempt.answers.map((answer) => ({
-      questionNumber: answer.questionNumber,
-      timeSpentSeconds: answer.timeSpentSeconds || 0,
-      isCorrect: answer.isCorrect,
-      selectedAnswer: answer.selectedAnswer,
-    })),
-    timeTakenSeconds: attempt.timeTakenSeconds || 0,
-  }));
-
-  return {
-    totalAttempts,
-    averageScore,
-    totalTime,
-    bestScore,
-    averageTimePerQuestion,
-    attempts: formattedAttempts,
-    questionStats,
-    attemptsWithTimes,
-  };
-}
-
-export default async function AnalyticsPage() {
-  const analytics = await getAnalytics();
+    fetchAnalytics();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -167,7 +85,21 @@ export default async function AnalyticsPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
-        {analytics.totalAttempts === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        ) : error || !analytics ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-destructive">
+                {error || "Failed to load analytics"}
+              </p>
+            </CardContent>
+          </Card>
+        ) : analytics.totalAttempts === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Target className="mb-4 size-12 text-muted-foreground" />
