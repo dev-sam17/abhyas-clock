@@ -1,6 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/lib/prisma";
 import {
   Clock,
   CheckCircle,
@@ -23,40 +25,58 @@ import { BackButton } from "@/components/back-button";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
 
-async function getTestHistory() {
-  const attempts = await prisma.testAttempt.findMany({
-    include: {
-      preset: {
-        select: {
-          name: true,
-          testMode: true,
-        },
-      },
-    },
-    orderBy: {
-      completedAt: "desc",
-    },
-  });
+type HistoryAttempt = {
+  id: number;
+  preset_id: number;
+  percentage: number | null;
+  correct_answers: number;
+  incorrect_answers: number;
+  unanswered: number;
+  time_taken_seconds: number;
+  overtime_seconds: number | null;
+  total_questions: number;
+  completed_at: string | null;
+  is_evaluated: boolean;
+  preset_name: string;
+  test_mode: string;
+};
 
-  return attempts.map((attempt) => ({
-    id: attempt.id,
-    preset_id: attempt.presetId,
-    percentage: attempt.isEvaluated ? Number(attempt.percentage) : null,
-    correct_answers: attempt.correctAnswers,
-    incorrect_answers: attempt.incorrectAnswers,
-    unanswered: attempt.unanswered,
-    time_taken_seconds: attempt.timeTakenSeconds || 0,
-    overtime_seconds: attempt.overtimeSeconds,
-    total_questions: attempt.totalQuestions,
-    completed_at: attempt.completedAt,
-    is_evaluated: attempt.isEvaluated,
-    preset_name: attempt.preset.name,
-    test_mode: attempt.preset.testMode,
-  }));
-}
+export default function HistoryPage() {
+  const [history, setHistory] = useState<HistoryAttempt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function HistoryPage() {
-  const history = await getTestHistory();
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchHistory = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch("/api/history");
+        if (!response.ok) {
+          throw new Error("Failed to load history");
+        }
+        const data = (await response.json()) as HistoryAttempt[];
+        if (!cancelled) {
+          setHistory(data);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Failed to load history");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -69,7 +89,7 @@ export default async function HistoryPage() {
         : `${secs}s`;
   };
 
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date: string | null) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -107,7 +127,19 @@ export default async function HistoryPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
-        {history.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-destructive">{error}</p>
+            </CardContent>
+          </Card>
+        ) : history.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="mb-4 size-12 text-muted-foreground" />

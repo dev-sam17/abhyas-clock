@@ -1,54 +1,128 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/lib/prisma";
 import { BackButton } from "@/components/back-button";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FileText, Clock, Timer, Globe, Lock } from "lucide-react";
 
-async function getCollection(id: string) {
-  const collection = await prisma.collection.findUnique({
-    where: { id: parseInt(id) },
-    include: {
-      presets: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: { attempts: true },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      user: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+type Collection = {
+  id: number;
+  name: string;
+  description: string | null;
+  isPublic: boolean;
+  user: { name: string } | null;
+  presets: Array<{
+    id: number;
+    name: string;
+    testMode: string;
+    isPublic: boolean;
+    totalQuestions: number;
+    timeLimitMinutes: number | null;
+    allowOvertime: boolean;
+    _count: { attempts: number };
+    user: { id: string; name: string } | null;
+  }>;
+};
 
-  if (!collection) {
-    notFound();
+export default function CollectionDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+
+  const [collection, setCollection] = useState<Collection | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchCollection = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/collections/${id}`);
+        if (res.status === 404) {
+          throw new Error("Collection not found");
+        }
+        if (!res.ok) {
+          throw new Error("Failed to load collection");
+        }
+        const data = (await res.json()) as Collection;
+        if (!cancelled) {
+          setCollection(data);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(
+            e instanceof Error ? e.message : "Failed to load collection"
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchCollection();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b border-border bg-card">
+          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+            <div className="flex items-center gap-2">
+              <BackButton />
+              <HomeButton />
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  return collection;
-}
-
-export default async function CollectionDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const collection = await getCollection(id);
+  if (error || !collection) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="border-b border-border bg-card">
+          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+            <div className="flex items-center gap-2">
+              <BackButton />
+              <HomeButton />
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-sm text-destructive">
+                {error || "Collection not found"}
+              </p>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
