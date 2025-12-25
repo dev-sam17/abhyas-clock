@@ -64,26 +64,33 @@ export default async function EnterAnswerKeyPage({
       attempt.totalQuestions > 0 ? (correct / attempt.totalQuestions) * 100 : 0;
 
     // Auto-evaluate using stored answer key
-    await prisma.$transaction([
-      // Update attempt with results
-      prisma.testAttempt.update({
-        where: { id: attemptId },
-        data: {
-          isEvaluated: true,
-          correctAnswers: correct,
-          incorrectAnswers: incorrect,
-          unanswered,
-          percentage,
-        },
-      }),
-      // Update all answers with isCorrect status
-      ...answerUpdates.map((update) =>
-        prisma.answer.update({
-          where: { id: update.id },
-          data: { isCorrect: update.isCorrect },
-        })
-      ),
-    ]);
+    await prisma.$transaction(
+      async (tx) => {
+        // Update attempt with results
+        await tx.testAttempt.update({
+          where: { id: attemptId },
+          data: {
+            isEvaluated: true,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            unanswered,
+            percentage,
+          },
+        });
+
+        // Update all answers with isCorrect status
+        for (const update of answerUpdates) {
+          await tx.answer.update({
+            where: { id: update.id },
+            data: { isCorrect: update.isCorrect },
+          });
+        }
+      },
+      {
+        maxWait: 5000, // 5 seconds to acquire connection
+        timeout: 30000, // 30 seconds to complete transaction
+      }
+    );
 
     // Redirect to results page after auto-evaluation
     redirect(`/results/${attemptId}`);

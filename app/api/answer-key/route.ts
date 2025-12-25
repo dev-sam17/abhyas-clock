@@ -68,38 +68,46 @@ export async function POST(request: NextRequest) {
     const percentage =
       attempt.totalQuestions > 0 ? (correct / attempt.totalQuestions) * 100 : 0;
 
-    await prisma.$transaction([
-      // Create/update preset-level answer key for future attempts
-      prisma.presetAnswerKey.upsert({
-        where: { presetId: attempt.presetId },
-        create: {
-          presetId: attempt.presetId,
-          correctAnswers,
-        },
-        update: {
-          correctAnswers,
-          updatedAt: new Date(),
-        },
-      }),
-      // Update attempt with results
-      prisma.testAttempt.update({
-        where: { id: attemptId },
-        data: {
-          isEvaluated: true,
-          correctAnswers: correct,
-          incorrectAnswers: incorrect,
-          unanswered,
-          percentage,
-        },
-      }),
-      // Update all answers with isCorrect status
-      ...answerUpdates.map((update) =>
-        prisma.answer.update({
-          where: update.where,
-          data: update.data,
-        })
-      ),
-    ]);
+    await prisma.$transaction(
+      async (tx) => {
+        // Create/update preset-level answer key for future attempts
+        await tx.presetAnswerKey.upsert({
+          where: { presetId: attempt.presetId },
+          create: {
+            presetId: attempt.presetId,
+            correctAnswers,
+          },
+          update: {
+            correctAnswers,
+            updatedAt: new Date(),
+          },
+        });
+
+        // Update attempt with results
+        await tx.testAttempt.update({
+          where: { id: attemptId },
+          data: {
+            isEvaluated: true,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            unanswered,
+            percentage,
+          },
+        });
+
+        // Update all answers with isCorrect status
+        for (const update of answerUpdates) {
+          await tx.answer.update({
+            where: update.where,
+            data: update.data,
+          });
+        }
+      },
+      {
+        maxWait: 5000, // 5 seconds to acquire connection
+        timeout: 30000, // 30 seconds to complete transaction
+      }
+    );
 
     return NextResponse.json({
       success: true,
