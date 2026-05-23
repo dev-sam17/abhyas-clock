@@ -35,7 +35,7 @@ export default function PresetsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+      <main className="mx-auto max-w-9xl px-4 py-8 flex-1">
         <PresetsList />
       </main>
       <Footer />

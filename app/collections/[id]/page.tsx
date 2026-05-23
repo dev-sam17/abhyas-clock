@@ -266,14 +266,14 @@ export default function CollectionDetailPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+          <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-center gap-2">
               <BackButton />
               <HomeButton />
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+        <main className="mx-auto max-w-9xl px-4 py-8 flex-1">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-sm text-muted-foreground">Loading...</p>
@@ -289,14 +289,14 @@ export default function CollectionDetailPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+          <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-center gap-2">
               <BackButton />
               <HomeButton />
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+        <main className="mx-auto max-w-9xl px-4 py-8 flex-1">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-sm text-destructive">
@@ -313,7 +313,7 @@ export default function CollectionDetailPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="flex items-center gap-2">
               <BackButton />
@@ -372,7 +372,7 @@ export default function CollectionDetailPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 flex-1 w-full">
+      <main className="mx-auto max-w-9xl px-4 py-8 flex-1 w-full">
         {collection.chapters.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -458,99 +458,62 @@ export default function CollectionDetailPage() {
                           Create Preset page.
                         </p>
                       ) : (
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                           {chapter.presets.map((preset) => (
                             <Card
                               key={preset.id}
-                              className="flex flex-col hover:shadow-lg hover:scale-[1.01] transition-all duration-200 border"
+                              className="relative overflow-hidden group flex flex-col justify-between p-3.5 hover:shadow-md hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 border bg-gradient-to-b from-card to-card/60 rounded-xl min-h-[135px]"
                             >
-                              <CardHeader className="pb-3">
-                                <div className="flex flex-col gap-2">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <Badge
-                                      variant={
-                                        preset.testMode === "timer"
-                                          ? "default"
-                                          : "secondary"
-                                      }
-                                      className="px-2 py-1"
-                                    >
-                                      {preset.testMode === "timer" ? (
-                                        <>
-                                          <Timer className="mr-1 size-3" />
-                                          Timer
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Clock className="mr-1 size-3" />
-                                          Stopwatch
-                                        </>
-                                      )}
-                                    </Badge>
-                                    {preset.isPublic ? (
-                                      <Badge
-                                        variant="outline"
-                                        className="gap-1 px-2 py-1"
-                                      >
-                                        <Globe className="size-3" />
-                                        Public
-                                      </Badge>
+                              <div className="space-y-2">
+                                {/* Badges Header */}
+                                <div className="flex items-center justify-between gap-2">
+                                  <Badge
+                                    variant={preset.testMode === "timer" ? "default" : "secondary"}
+                                    className="text-[9px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold shrink-0"
+                                  >
+                                    {preset.testMode === "timer" ? (
+                                      <span className="flex items-center gap-0.5"><Timer className="size-2.5" /> Timer</span>
                                     ) : (
-                                      <Badge
-                                        variant="outline"
-                                        className="gap-1 px-2 py-1"
-                                      >
-                                        <Lock className="size-3" />
-                                        Private
-                                      </Badge>
+                                      <span className="flex items-center gap-0.5"><Clock className="size-2.5" /> Static</span>
                                     )}
-                                  </div>
-                                  <CardTitle className="text-base font-bold leading-tight">
-                                    {preset.name}
-                                  </CardTitle>
-                                </div>
-                              </CardHeader>
-                              <CardContent className="flex-1 flex flex-col justify-between pt-0">
-                                <div className="text-sm space-y-1 mb-3">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <FileText className="size-3" />
-                                    <span>
-                                      {preset.totalQuestions} questions
-                                    </span>
-                                    {preset.testMode === "timer" &&
-                                      preset.timeLimitMinutes && (
-                                        <>
-                                          <span>•</span>
-                                          <Timer className="size-3" />
-                                          <span>
-                                            {preset.timeLimitMinutes} min
-                                          </span>
-                                        </>
-                                      )}
-                                  </div>
-                                  {preset.testMode === "timer" &&
-                                    preset.allowOvertime && (
-                                      <div className="text-xs text-muted-foreground">
-                                        ⏱️ Overtime allowed
-                                      </div>
-                                    )}
-                                  {preset.user && (
-                                    <div className="text-xs truncate">
-                                      By {preset.user.name}
-                                    </div>
-                                  )}
+                                  </Badge>
+
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-border/60 shrink-0">
+                                    {preset.isPublic ? "Public" : "Private"}
+                                  </Badge>
                                 </div>
 
-                                <div className="flex items-center justify-between gap-2 pt-3 border-t">
-                                  <span className="text-xs text-muted-foreground">
-                                    {preset._count.attempts} attempt
-                                    {preset._count.attempts !== 1 ? "s" : ""}
+                                {/* Test Name */}
+                                <h4 className="text-sm font-bold text-foreground line-clamp-1 tracking-tight leading-snug group-hover:text-primary transition-colors">
+                                  {preset.name}
+                                </h4>
+
+                                {/* Questions & Time info */}
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground font-medium">
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="size-3" /> {preset.totalQuestions} Qs
                                   </span>
-                                  <Link href={`/take-test/${preset.id}`}>
-                                    <Button size="sm">Take Test</Button>
-                                  </Link>
+                                  {preset.testMode === "timer" && preset.timeLimitMinutes && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-0.5">
+                                        <Timer className="size-3" /> {preset.timeLimitMinutes} min
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
-                              </CardContent>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-border/20 mt-1 shrink-0">
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                  {preset._count.attempts} attempt{preset._count.attempts !== 1 ? "s" : ""}
+                                </span>
+                                <Link href={`/take-test/${preset.id}`}>
+                                  <Button size="sm" className="h-7 text-xs px-3 font-semibold shadow-sm hover:scale-[1.03] transition-transform">
+                                    Take Test
+                                  </Button>
+                                </Link>
+                              </div>
                             </Card>
                           ))}
                         </div>

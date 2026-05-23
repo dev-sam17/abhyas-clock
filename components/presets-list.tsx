@@ -203,7 +203,7 @@ export function PresetsList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
           {presets.map((preset) => {
             const isOwner = preset.userId === userId;
             return (
@@ -270,8 +270,8 @@ export function PresetsList() {
                     )}
                     {preset.chapter && preset.chapter.collection && (
                       <div className="text-xs font-medium truncate flex flex-wrap gap-1">
-                        <FolderOpen className="size-3" /> {preset.chapter.collection.name} 
-                        <span className="text-muted-foreground">/</span> 
+                        <FolderOpen className="size-3" /> {preset.chapter.collection.name}
+                        <span className="text-muted-foreground">/</span>
                         <BookOpen className="size-3" /> Ch. {preset.chapter.chapterNumber}: {preset.chapter.name}
                       </div>
                     )}

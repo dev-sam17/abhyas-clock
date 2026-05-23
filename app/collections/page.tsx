@@ -237,7 +237,7 @@ export default function CollectionsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="flex items-center gap-2">
               <BackButton />
@@ -256,7 +256,7 @@ export default function CollectionsPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
+      <main className="mx-auto max-w-9xl px-4 py-8 flex-1">
         {collections.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -273,88 +273,114 @@ export default function CollectionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {collections.map((collection) => (
               <Card
                 key={collection.id}
-                className="hover:shadow-lg transition-shadow"
+                className="relative overflow-hidden group flex flex-col hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/60 bg-gradient-to-b from-card to-card/50 transition-all duration-300 rounded-xl"
               >
-                <Link href={`/collections/${collection.id}`}>
-                  <CardHeader className="cursor-pointer">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2 flex-1">
-                        <FolderOpen className="size-5 text-primary" />
-                        <CardTitle className="text-lg">
-                          {collection.name}
-                        </CardTitle>
+                {/* Visual Accent top bar */}
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary/40 via-violet-500/40 to-primary/40 opacity-70 group-hover:opacity-100 transition-opacity" />
+                
+                <Link href={`/collections/${collection.id}`} className="flex-1 flex flex-col">
+                  <CardHeader className="cursor-pointer pb-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary shadow-sm shrink-0">
+                          <FolderOpen className="size-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <CardTitle className="text-base font-bold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
+                            {collection.name}
+                          </CardTitle>
+                          {/* Visibility badge */}
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {collection.isPublic ? (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Globe className="size-2.5" /> Public
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Lock className="size-2.5" /> Private
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Badge variant="secondary">
-                          {collection._count?.chapters || 0} ch.
+                      
+                      {/* Glass capsules */}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge variant="secondary" className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                          {collection._count?.chapters || 0} Ch
                         </Badge>
-                        <Badge variant="outline">
-                          {getTotalPresets(collection)} tests
+                        <Badge variant="outline" className="text-[10px] font-medium px-2 py-0.5 bg-muted/30 border-border/55">
+                          {getTotalPresets(collection)} Tests
                         </Badge>
                       </div>
                     </div>
+                    
                     {collection.description && (
-                      <CardDescription className="mt-2">
+                      <CardDescription className="mt-2.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         {collection.description}
                       </CardDescription>
                     )}
                   </CardHeader>
                 </Link>
-                <CardContent>
-                  <div className="space-y-3">
+
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
                     {collection.chapters && collection.chapters.length > 0 && (
-                      <div className="space-y-1">
+                      <div className="rounded-lg border border-border/40 bg-muted/30 p-2.5 space-y-1.5">
+                        <div className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase px-1 pb-1 border-b border-border/20">
+                          Modules Overview
+                        </div>
                         {collection.chapters.slice(0, 3).map((ch: any) => (
                           <div
                             key={ch.id}
-                            className="flex items-center gap-2 text-sm"
+                            className="flex items-center justify-between gap-2 text-xs py-1 px-1 rounded hover:bg-muted/40 transition-colors"
                           >
-                            <BookOpen className="size-3 text-muted-foreground" />
-                            <span className="truncate">
-                              Ch. {ch.chapterNumber}: {ch.name}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="ml-auto text-xs"
-                            >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <BookOpen className="size-3.5 text-primary/70 shrink-0" />
+                              <span className="font-medium text-foreground/80 truncate">
+                                Ch. {ch.chapterNumber}: {ch.name}
+                              </span>
+                            </div>
+                            <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded-full shrink-0">
                               {ch._count?.presets || 0}
-                            </Badge>
+                            </span>
                           </div>
                         ))}
                         {collection.chapters.length > 3 && (
-                          <div className="text-xs text-muted-foreground">
-                            +{collection.chapters.length - 3} more chapters
+                          <div className="text-[10px] text-muted-foreground font-medium text-center pt-1 border-t border-border/10">
+                            + {collection.chapters.length - 3} more modules
                           </div>
                         )}
                       </div>
                     )}
-                    <div className="flex gap-2 pt-2">
+                    
+                    <div className="flex gap-2 pt-1">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 text-xs font-semibold h-8 hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-all"
                         onClick={(e) => {
                           e.preventDefault();
                           handleEdit(collection);
                         }}
                       >
-                        <Pencil className="mr-2 size-3" />
+                        <Pencil className="mr-1.5 size-3.5" />
                         Edit
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1"
+                        className="flex-1 text-xs font-semibold h-8 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30 transition-all"
                         onClick={(e) => {
                           e.preventDefault();
                           setDeleteId(collection.id);
                         }}
                       >
-                        <Trash2 className="mr-2 size-3" />
+                        <Trash2 className="mr-1.5 size-3.5" />
                         Delete
                       </Button>
                     </div>
