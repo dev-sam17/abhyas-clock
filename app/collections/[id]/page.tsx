@@ -459,7 +459,11 @@ export default function CollectionDetailPage() {
                         </p>
                       ) : (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                          {chapter.presets.map((preset) => (
+                          {chapter.presets.sort((a, b) => {
+                            const aNum = Number(a.name.split(" ")[0]);
+                            const bNum = Number(b.name.split(" ")[0]);
+                            return aNum - bNum;
+                          }).map((preset) => (
                             <Card
                               key={preset.id}
                               className="relative overflow-hidden group flex flex-col justify-between p-3.5 hover:shadow-md hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 border bg-gradient-to-b from-card to-card/60 rounded-xl min-h-[135px]"
