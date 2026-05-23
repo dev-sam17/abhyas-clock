@@ -123,8 +123,8 @@ export default function CollectionsPage() {
         toast.error("All chapters must have a name");
         return;
       }
-      if (!ch.chapterNumber || isNaN(parseInt(ch.chapterNumber))) {
-        toast.error("All chapters must have a valid chapter number");
+      if (!ch.chapterNumber.trim()) {
+        toast.error("All chapters must have a chapter number");
         return;
       }
     }
@@ -139,7 +139,7 @@ export default function CollectionsPage() {
           isPublic,
           chapters: chapters.map((ch) => ({
             name: ch.name.trim(),
-            chapterNumber: parseInt(ch.chapterNumber),
+            chapterNumber: ch.chapterNumber.trim(),
           })),
         }),
       });
@@ -457,9 +457,8 @@ export default function CollectionsPage() {
                       className="flex items-center gap-2 rounded-lg border border-border p-2"
                     >
                       <Input
-                        type="number"
-                        min="1"
-                        placeholder="#"
+                        type="text"
+                        placeholder="e.g., 1a"
                         value={ch.chapterNumber}
                         onChange={(e) =>
                           updateChapterInput(
@@ -468,7 +467,7 @@ export default function CollectionsPage() {
                             e.target.value
                           )
                         }
-                        className="w-16"
+                        className="w-20"
                       />
                       <Input
                         placeholder="Chapter name"

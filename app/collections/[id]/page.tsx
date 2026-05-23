@@ -59,7 +59,7 @@ type Preset = {
 type Chapter = {
   id: number;
   name: string;
-  chapterNumber: number;
+  chapterNumber: string;
   presets: Preset[];
 };
 
@@ -154,8 +154,8 @@ export default function CollectionDetailPage() {
       toast.error("Please enter a chapter name");
       return;
     }
-    if (!newChapterNumber || isNaN(parseInt(newChapterNumber))) {
-      toast.error("Please enter a valid chapter number");
+    if (!newChapterNumber.trim()) {
+      toast.error("Please enter a chapter number");
       return;
     }
 
@@ -166,7 +166,7 @@ export default function CollectionDetailPage() {
         body: JSON.stringify({
           collectionId: parseInt(id!),
           name: newChapterName.trim(),
-          chapterNumber: parseInt(newChapterNumber),
+          chapterNumber: newChapterNumber.trim(),
         }),
       });
 
@@ -197,8 +197,8 @@ export default function CollectionDetailPage() {
       toast.error("Please enter a chapter name");
       return;
     }
-    if (!editChapterNumber || isNaN(parseInt(editChapterNumber))) {
-      toast.error("Please enter a valid chapter number");
+    if (!editChapterNumber.trim()) {
+      toast.error("Please enter a chapter number");
       return;
     }
 
@@ -209,7 +209,7 @@ export default function CollectionDetailPage() {
         body: JSON.stringify({
           id: editChapter.id,
           name: editChapterName.trim(),
-          chapterNumber: parseInt(editChapterNumber),
+          chapterNumber: editChapterNumber.trim(),
         }),
       });
 
@@ -541,9 +541,8 @@ export default function CollectionDetailPage() {
               <Label htmlFor="chapter-number">Chapter Number</Label>
               <Input
                 id="chapter-number"
-                type="number"
-                min="1"
-                placeholder="e.g., 1"
+                type="text"
+                placeholder="e.g., 1a, 2b, 3c"
                 value={newChapterNumber}
                 onChange={(e) => setNewChapterNumber(e.target.value)}
               />
@@ -585,8 +584,8 @@ export default function CollectionDetailPage() {
               <Label htmlFor="edit-chapter-number">Chapter Number</Label>
               <Input
                 id="edit-chapter-number"
-                type="number"
-                min="1"
+                type="text"
+                placeholder="e.g., 1a, 2b, 3c"
                 value={editChapterNumber}
                 onChange={(e) => setEditChapterNumber(e.target.value)}
               />

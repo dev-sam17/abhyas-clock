@@ -171,7 +171,7 @@ model Collection {
 model Chapter {
   id            Int          @id @default(autoincrement())
   name          String       @db.VarChar(255)
-  chapterNumber Int          @map("chapter_number")
+  chapterNumber String       @map("chapter_number") @db.VarChar(50)
   collectionId  Int          @map("collection_id")
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")

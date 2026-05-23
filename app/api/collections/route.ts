@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         ...(chapters && chapters.length > 0 && {
           chapters: {
-            create: chapters.map((ch: { name: string; chapterNumber: number }) => ({
+            create: chapters.map((ch: { name: string; chapterNumber: string }) => ({
               name: ch.name,
               chapterNumber: ch.chapterNumber,
             })),
