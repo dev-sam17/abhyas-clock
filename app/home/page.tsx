@@ -195,8 +195,8 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
-                Create and manage collections to organize your test presets by
-                topic or subject.
+                Create and manage collections to organize your test presets into
+                chapters and modules.
               </p>
               <Link href="/collections">
                 <Button className="w-full" variant="secondary">

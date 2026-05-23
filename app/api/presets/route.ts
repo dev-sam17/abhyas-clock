@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       timeLimitMinutes,
       allowOvertime,
       isPublic,
-      collectionId,
+      chapterId,
     } = body;
 
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         allowOvertime: testMode === "timer" ? allowOvertime : false,
         isPublic: isPublic || false,
         userId: session.user.id,
-        collectionId: collectionId || null,
+        chapterId: chapterId || null,
       },
     });
 
@@ -113,7 +113,16 @@ export async function GET() {
         _count: {
           select: { attempts: true },
         },
-        collection: true,
+        chapter: {
+          include: {
+            collection: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         user: {
           select: {
             id: true,
@@ -191,7 +200,7 @@ export async function PUT(request: Request) {
       id,
       name,
       isPublic,
-      collectionId,
+      chapterId,
       testMode,
       timeLimitMinutes,
       allowOvertime,
@@ -221,7 +230,7 @@ export async function PUT(request: Request) {
       data: {
         ...(name !== undefined && { name }),
         ...(isPublic !== undefined && { isPublic }),
-        ...(collectionId !== undefined && { collectionId }),
+        ...(chapterId !== undefined && { chapterId }),
         ...(testMode !== undefined && { testMode }),
         ...(timeLimitMinutes !== undefined && { timeLimitMinutes }),
         ...(allowOvertime !== undefined && { allowOvertime }),

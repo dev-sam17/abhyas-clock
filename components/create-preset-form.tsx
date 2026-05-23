@@ -37,7 +37,8 @@ export function CreatePresetForm() {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState("");
   const [allowOvertime, setAllowOvertime] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
-  const [collectionId, setCollectionId] = useState<string>("");
+  const [collectionId, setCollectionId] = useState<string>("none");
+  const [chapterId, setChapterId] = useState<string>("none");
   const [collections, setCollections] = useState<any[]>([]);
 
   useEffect(() => {
@@ -54,6 +55,8 @@ export function CreatePresetForm() {
     };
     fetchCollections();
   }, []);
+
+  const selectedCollection = collections.find((c) => c.id.toString() === collectionId);
 
   const calculateEndingQuestion = () => {
     const start = Number.parseInt(startingQuestion);
@@ -106,7 +109,7 @@ export function CreatePresetForm() {
             testMode === "timer" ? Number.parseInt(timeLimitMinutes) : null,
           allowOvertime: testMode === "timer" ? allowOvertime : false,
           isPublic,
-          collectionId: collectionId ? parseInt(collectionId) : null,
+          chapterId: chapterId && chapterId !== "none" ? parseInt(chapterId) : null,
         }),
       });
 
@@ -322,28 +325,61 @@ export function CreatePresetForm() {
             />
           </div>
 
-          {/* Collection Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="collection">Collection (Optional)</Label>
-            <Select value={collectionId} onValueChange={setCollectionId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a collection" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Collection</SelectItem>
-                {collections.map((collection) => (
-                  <SelectItem
-                    key={collection.id}
-                    value={collection.id.toString()}
-                  >
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Organize presets into collections for better management
-            </p>
+          {/* Collection and Chapter Selection */}
+          <div className="space-y-4 rounded-lg border border-border bg-muted/50 p-4">
+            <div className="space-y-2">
+              <Label htmlFor="collection">Collection (Book)</Label>
+              <Select
+                value={collectionId}
+                onValueChange={(val) => {
+                  setCollectionId(val);
+                  setChapterId("none"); // Reset chapter when collection changes
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a collection" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Collection</SelectItem>
+                  {collections.map((collection) => (
+                    <SelectItem
+                      key={collection.id}
+                      value={collection.id.toString()}
+                    >
+                      {collection.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                First select a collection
+              </p>
+            </div>
+
+            {collectionId !== "none" && (
+              <div className="space-y-2">
+                <Label htmlFor="chapter">Chapter (Module)</Label>
+                <Select value={chapterId} onValueChange={setChapterId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a chapter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Chapter</SelectItem>
+                    {selectedCollection?.chapters?.map((chapter: any) => (
+                      <SelectItem
+                        key={chapter.id}
+                        value={chapter.id.toString()}
+                      >
+                        Ch. {chapter.chapterNumber}: {chapter.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Then select which chapter to assign this test to
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

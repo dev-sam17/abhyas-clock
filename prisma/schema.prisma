@@ -22,15 +22,15 @@ model TestPreset {
   allowOvertime    Boolean          @default(false) @map("allow_overtime") // Only for timer mode
   isPublic         Boolean          @default(false) @map("is_public")
   userId           String           @map("user_id")
-  collectionId     Int?             @map("collection_id")
+  chapterId        Int?             @map("chapter_id")
   createdAt        DateTime         @default(now()) @map("created_at")
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  collection       Collection?      @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  chapter          Chapter?         @relation(fields: [chapterId], references: [id], onDelete: SetNull)
   presetAnswerKey  PresetAnswerKey?
   attempts         TestAttempt[]
 
   @@index([userId])
-  @@index([collectionId])
+  @@index([chapterId])
   @@map("test_presets")
 }
 
@@ -162,8 +162,22 @@ model Collection {
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  presets     TestPreset[]
+  chapters    Chapter[]
 
   @@index([userId])
   @@map("collections")
+}
+
+model Chapter {
+  id            Int          @id @default(autoincrement())
+  name          String       @db.VarChar(255)
+  chapterNumber Int          @map("chapter_number")
+  collectionId  Int          @map("collection_id")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  collection    Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  presets       TestPreset[]
+
+  @@index([collectionId])
+  @@map("chapters")
 }

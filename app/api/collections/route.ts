@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, isPublic } = body;
+    const { name, description, isPublic, chapters } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -24,6 +24,19 @@ export async function POST(request: Request) {
         description: description || null,
         isPublic: isPublic || false,
         userId: session.user.id,
+        ...(chapters && chapters.length > 0 && {
+          chapters: {
+            create: chapters.map((ch: { name: string; chapterNumber: number }) => ({
+              name: ch.name,
+              chapterNumber: ch.chapterNumber,
+            })),
+          },
+        }),
+      },
+      include: {
+        chapters: {
+          orderBy: { chapterNumber: "asc" },
+        },
       },
     });
 
@@ -51,14 +64,16 @@ export async function GET() {
       },
       orderBy: { createdAt: "desc" },
       include: {
-        _count: {
-          select: { presets: true },
-        },
-        presets: {
-          select: {
-            id: true,
-            name: true,
+        chapters: {
+          orderBy: { chapterNumber: "asc" },
+          include: {
+            _count: {
+              select: { presets: true },
+            },
           },
+        },
+        _count: {
+          select: { chapters: true },
         },
         user: {
           select: {

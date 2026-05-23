@@ -20,9 +20,11 @@ import {
   FolderOpen,
   Pencil,
   Trash2,
-  FileText,
+  BookOpen,
   Globe,
   Lock,
+  Plus,
+  X,
 } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { HomeButton } from "@/components/home-button";
@@ -48,6 +50,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+type ChapterInput = {
+  name: string;
+  chapterNumber: string;
+};
+
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +65,7 @@ export default function CollectionsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [chapters, setChapters] = useState<ChapterInput[]>([]);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(false);
@@ -82,10 +90,43 @@ export default function CollectionsPage() {
     }
   };
 
+  const addChapterInput = () => {
+    setChapters([
+      ...chapters,
+      { name: "", chapterNumber: String(chapters.length + 1) },
+    ]);
+  };
+
+  const removeChapterInput = (index: number) => {
+    setChapters(chapters.filter((_, i) => i !== index));
+  };
+
+  const updateChapterInput = (
+    index: number,
+    field: keyof ChapterInput,
+    value: string
+  ) => {
+    const updated = [...chapters];
+    updated[index] = { ...updated[index], [field]: value };
+    setChapters(updated);
+  };
+
   const handleCreate = async () => {
     if (!name.trim()) {
       toast.error("Please enter a collection name");
       return;
+    }
+
+    // Validate chapters if any
+    for (const ch of chapters) {
+      if (!ch.name.trim()) {
+        toast.error("All chapters must have a name");
+        return;
+      }
+      if (!ch.chapterNumber || isNaN(parseInt(ch.chapterNumber))) {
+        toast.error("All chapters must have a valid chapter number");
+        return;
+      }
     }
 
     try {
@@ -96,6 +137,10 @@ export default function CollectionsPage() {
           name: name.trim(),
           description: description.trim() || null,
           isPublic,
+          chapters: chapters.map((ch) => ({
+            name: ch.name.trim(),
+            chapterNumber: parseInt(ch.chapterNumber),
+          })),
         }),
       });
 
@@ -104,6 +149,7 @@ export default function CollectionsPage() {
         setName("");
         setDescription("");
         setIsPublic(false);
+        setChapters([]);
         setShowCreateDialog(false);
         fetchCollections();
       } else {
@@ -112,8 +158,6 @@ export default function CollectionsPage() {
     } catch (error) {
       console.error("Error creating collection:", error);
       toast.error("Failed to create collection");
-    } finally {
-      fetchCollections();
     }
   };
 
@@ -177,6 +221,15 @@ export default function CollectionsPage() {
     }
   };
 
+  const getTotalPresets = (collection: any) => {
+    return (
+      collection.chapters?.reduce(
+        (sum: number, ch: any) => sum + (ch._count?.presets || 0),
+        0
+      ) || 0
+    );
+  };
+
   if (loading) {
     return <LoadingSpinner message="Loading collections..." />;
   }
@@ -210,7 +263,8 @@ export default function CollectionsPage() {
               <FolderOpen className="size-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No collections yet</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Create your first collection to organize your test presets
+                Create your first collection to organize your test presets into
+                chapters
               </p>
               <Button onClick={() => setShowCreateDialog(true)}>
                 <PlusCircle className="mr-2 size-4" />
@@ -234,9 +288,14 @@ export default function CollectionsPage() {
                           {collection.name}
                         </CardTitle>
                       </div>
-                      <Badge variant="secondary">
-                        {collection._count.presets} presets
-                      </Badge>
+                      <div className="flex gap-1">
+                        <Badge variant="secondary">
+                          {collection._count?.chapters || 0} ch.
+                        </Badge>
+                        <Badge variant="outline">
+                          {getTotalPresets(collection)} tests
+                        </Badge>
+                      </div>
                     </div>
                     {collection.description && (
                       <CardDescription className="mt-2">
@@ -247,20 +306,28 @@ export default function CollectionsPage() {
                 </Link>
                 <CardContent>
                   <div className="space-y-3">
-                    {collection.presets.length > 0 && (
+                    {collection.chapters && collection.chapters.length > 0 && (
                       <div className="space-y-1">
-                        {collection.presets.slice(0, 3).map((preset: any) => (
+                        {collection.chapters.slice(0, 3).map((ch: any) => (
                           <div
-                            key={preset.id}
+                            key={ch.id}
                             className="flex items-center gap-2 text-sm"
                           >
-                            <FileText className="size-3 text-muted-foreground" />
-                            <span className="truncate">{preset.name}</span>
+                            <BookOpen className="size-3 text-muted-foreground" />
+                            <span className="truncate">
+                              Ch. {ch.chapterNumber}: {ch.name}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="ml-auto text-xs"
+                            >
+                              {ch._count?.presets || 0}
+                            </Badge>
                           </div>
                         ))}
-                        {collection.presets.length > 3 && (
+                        {collection.chapters.length > 3 && (
                           <div className="text-xs text-muted-foreground">
-                            +{collection.presets.length - 3} more
+                            +{collection.chapters.length - 3} more chapters
                           </div>
                         )}
                       </div>
@@ -300,11 +367,12 @@ export default function CollectionsPage() {
       </main>
 
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Collection</DialogTitle>
             <DialogDescription>
-              Create a new collection to organize your test presets
+              Create a new collection with chapters to organize your test
+              presets
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -340,11 +408,72 @@ export default function CollectionsPage() {
                 onCheckedChange={setIsPublic}
               />
             </div>
+
+            {/* Chapters Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Chapters (Optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addChapterInput}
+                >
+                  <Plus className="mr-1 size-3" />
+                  Add Chapter
+                </Button>
+              </div>
+              {chapters.length > 0 && (
+                <div className="space-y-2">
+                  {chapters.map((ch, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded-lg border border-border p-2"
+                    >
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="#"
+                        value={ch.chapterNumber}
+                        onChange={(e) =>
+                          updateChapterInput(
+                            index,
+                            "chapterNumber",
+                            e.target.value
+                          )
+                        }
+                        className="w-16"
+                      />
+                      <Input
+                        placeholder="Chapter name"
+                        value={ch.name}
+                        onChange={(e) =>
+                          updateChapterInput(index, "name", e.target.value)
+                        }
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeChapterInput(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowCreateDialog(false)}
+              onClick={() => {
+                setShowCreateDialog(false);
+                setChapters([]);
+              }}
             >
               Cancel
             </Button>
@@ -408,9 +537,9 @@ export default function CollectionsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Collection</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this collection? The presets in
-              this collection will not be deleted, they will just be removed
-              from the collection.
+              Are you sure you want to delete this collection? All chapters will
+              be deleted. The test presets in the chapters will not be deleted,
+              they will just be unlinked.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

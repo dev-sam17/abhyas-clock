@@ -22,6 +22,8 @@ import {
   Trash2,
   Globe,
   Lock,
+  FolderOpen,
+  BookOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -61,7 +63,8 @@ export function PresetsList() {
   const [editPreset, setEditPreset] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editIsPublic, setEditIsPublic] = useState(false);
-  const [editCollectionId, setEditCollectionId] = useState<string>("");
+  const [editCollectionId, setEditCollectionId] = useState<string>("none");
+  const [editChapterId, setEditChapterId] = useState<string>("none");
   const [editTestMode, setEditTestMode] = useState<string>("timer");
   const [editTimeLimitMinutes, setEditTimeLimitMinutes] = useState<number>(60);
   const [editAllowOvertime, setEditAllowOvertime] = useState(false);
@@ -135,7 +138,8 @@ export function PresetsList() {
     setEditPreset(preset);
     setEditName(preset.name);
     setEditIsPublic(preset.isPublic);
-    setEditCollectionId(preset.collectionId?.toString() || "none");
+    setEditCollectionId(preset.chapter?.collectionId?.toString() || "none");
+    setEditChapterId(preset.chapterId?.toString() || "none");
     setEditTestMode(preset.testMode || "timer");
     setEditTimeLimitMinutes(preset.timeLimitMinutes || 60);
     setEditAllowOvertime(preset.allowOvertime || false);
@@ -152,9 +156,9 @@ export function PresetsList() {
           id: editPreset.id,
           name: editName,
           isPublic: editIsPublic,
-          collectionId:
-            editCollectionId && editCollectionId !== "none"
-              ? parseInt(editCollectionId)
+          chapterId:
+            editChapterId && editChapterId !== "none"
+              ? parseInt(editChapterId)
               : null,
           testMode: editTestMode,
           timeLimitMinutes:
@@ -264,9 +268,11 @@ export function PresetsList() {
                         ⏱️ Overtime allowed
                       </div>
                     )}
-                    {preset.collection && (
-                      <div className="text-xs font-medium truncate">
-                        📁 {preset.collection.name}
+                    {preset.chapter && preset.chapter.collection && (
+                      <div className="text-xs font-medium truncate flex flex-wrap gap-1">
+                        <FolderOpen className="size-3" /> {preset.chapter.collection.name} 
+                        <span className="text-muted-foreground">/</span> 
+                        <BookOpen className="size-3" /> Ch. {preset.chapter.chapterNumber}: {preset.chapter.name}
                       </div>
                     )}
                     {!isOwner && preset.user && (
@@ -410,27 +416,57 @@ export function PresetsList() {
                 onCheckedChange={setEditIsPublic}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-collection">Collection</Label>
-              <Select
-                value={editCollectionId}
-                onValueChange={setEditCollectionId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a collection" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Collection</SelectItem>
-                  {collections.map((collection) => (
-                    <SelectItem
-                      key={collection.id}
-                      value={collection.id.toString()}
-                    >
-                      {collection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Collection and Chapter Selection */}
+            <div className="space-y-4 rounded-lg border border-border bg-muted/50 p-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-collection">Collection (Book)</Label>
+                <Select
+                  value={editCollectionId}
+                  onValueChange={(val) => {
+                    setEditCollectionId(val);
+                    setEditChapterId("none"); // Reset chapter when collection changes
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a collection" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Collection</SelectItem>
+                    {collections.map((collection) => (
+                      <SelectItem
+                        key={collection.id}
+                        value={collection.id.toString()}
+                      >
+                        {collection.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editCollectionId !== "none" && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-chapter">Chapter (Module)</Label>
+                  <Select value={editChapterId} onValueChange={setEditChapterId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a chapter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Chapter</SelectItem>
+                      {collections
+                        .find((c) => c.id.toString() === editCollectionId)
+                        ?.chapters?.map((chapter: any) => (
+                          <SelectItem
+                            key={chapter.id}
+                            value={chapter.id.toString()}
+                          >
+                            Ch. {chapter.chapterNumber}: {chapter.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

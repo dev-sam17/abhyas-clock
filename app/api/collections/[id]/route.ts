@@ -27,22 +27,28 @@ export async function GET(
     const collection = await prisma.collection.findUnique({
       where: { id: collectionId },
       include: {
-        presets: {
-          orderBy: { createdAt: "desc" },
+        chapters: {
+          orderBy: { chapterNumber: "asc" },
           include: {
-            _count: {
-              select: { attempts: true },
-            },
-            user: {
-              select: {
-                id: true,
-                name: true,
+            presets: {
+              orderBy: { createdAt: "desc" },
+              include: {
+                _count: {
+                  select: { attempts: true },
+                },
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
         },
         user: {
           select: {
+            id: true,
             name: true,
           },
         },
