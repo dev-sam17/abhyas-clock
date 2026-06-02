@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { cacheKeys, getCache, setCache } from "@/lib/redis";
 
 export async function GET(
   _request: NextRequest,
@@ -22,6 +23,12 @@ export async function GET(
         { error: "Invalid attempt id" },
         { status: 400 }
       );
+    }
+
+    const cacheKey = cacheKeys.attempt(session.user.id, attemptId);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const attempt = await prisma.testAttempt.findUnique({
@@ -45,6 +52,8 @@ export async function GET(
     if (attempt.userId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    await setCache(cacheKey, attempt);
 
     return NextResponse.json(attempt);
   } catch (error) {

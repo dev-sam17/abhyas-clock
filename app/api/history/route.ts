@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { cacheKeys, getCache, setCache } from "@/lib/redis";
 
 export async function GET() {
   try {
@@ -9,6 +10,12 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cacheKey = cacheKeys.history(session.user.id);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const attempts = await prisma.testAttempt.findMany({
@@ -28,8 +35,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(
-      attempts.map((attempt) => ({
+    const payload = attempts.map((attempt) => ({
         id: attempt.id,
         preset_id: attempt.presetId,
         percentage: attempt.isEvaluated ? Number(attempt.percentage) : null,
@@ -43,8 +49,11 @@ export async function GET() {
         is_evaluated: attempt.isEvaluated,
         preset_name: attempt.preset.name,
         test_mode: attempt.preset.testMode,
-      }))
-    );
+    }));
+
+    await setCache(cacheKey, payload);
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("[v0] Error fetching history:", error);
     return NextResponse.json(

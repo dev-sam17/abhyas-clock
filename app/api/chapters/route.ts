@@ -2,6 +2,24 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import {
+  cacheKeys,
+  cachePrefixes,
+  getCache,
+  invalidateByPrefix,
+  setCache,
+} from "@/lib/redis";
+
+// Chapters appear inside collection list/detail payloads, so chapter
+// mutations invalidate those caches as well.
+async function invalidateChapterCaches() {
+  await invalidateByPrefix(
+    cachePrefixes.chapters,
+    cachePrefixes.collection,
+    cachePrefixes.collections,
+    cachePrefixes.presets
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -44,6 +62,8 @@ export async function POST(request: Request) {
         collectionId,
       },
     });
+
+    await invalidateChapterCaches();
 
     return NextResponse.json(chapter, { status: 201 });
   } catch (error) {
@@ -90,6 +110,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const cacheKey = cacheKeys.chapters(session.user.id, collectionId);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     const chapters = await prisma.chapter.findMany({
       where: { collectionId: parseInt(collectionId) },
       orderBy: { chapterNumber: "asc" },
@@ -105,6 +131,8 @@ export async function GET(request: Request) {
         },
       },
     });
+
+    await setCache(cacheKey, chapters);
 
     return NextResponse.json(chapters);
   } catch (error) {
@@ -158,6 +186,8 @@ export async function PUT(request: Request) {
       },
     });
 
+    await invalidateChapterCaches();
+
     return NextResponse.json(updatedChapter);
   } catch (error) {
     console.error("Error updating chapter:", error);
@@ -205,6 +235,8 @@ export async function DELETE(request: Request) {
     await prisma.chapter.delete({
       where: { id: parseInt(id) },
     });
+
+    await invalidateChapterCaches();
 
     return NextResponse.json({ success: true });
   } catch (error) {

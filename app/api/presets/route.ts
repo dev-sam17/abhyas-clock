@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import {
+  cacheKeys,
+  cachePrefixes,
+  getCache,
+  invalidateByPrefix,
+  setCache,
+} from "@/lib/redis";
+
+// Presets are nested inside collection detail and chapter payloads, so
+// preset mutations invalidate those caches as well.
+async function invalidatePresetCaches() {
+  await invalidateByPrefix(
+    cachePrefixes.presets,
+    cachePrefixes.collection,
+    cachePrefixes.chapters
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -82,6 +99,8 @@ export async function POST(request: Request) {
     });
 
 
+    await invalidatePresetCaches();
+
     return NextResponse.json(preset, { status: 201 });
   } catch (error) {
     console.error("[v0] Error creating preset:", error);
@@ -102,6 +121,12 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cacheKey = cacheKeys.presets(session.user.id);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const presets = await prisma.testPreset.findMany({
@@ -132,6 +157,8 @@ export async function GET() {
         },
       },
     });
+
+    await setCache(cacheKey, presets);
 
     return NextResponse.json(presets);
   } catch (error) {
@@ -176,6 +203,8 @@ export async function DELETE(request: Request) {
     await prisma.testPreset.delete({
       where: { id: parseInt(id) },
     });
+
+    await invalidatePresetCaches();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -236,6 +265,8 @@ export async function PUT(request: Request) {
         ...(allowOvertime !== undefined && { allowOvertime }),
       },
     });
+
+    await invalidatePresetCaches();
 
     return NextResponse.json(updatedPreset);
   } catch (error) {

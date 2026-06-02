@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { cacheKeys, getCache, setCache } from "@/lib/redis";
 
 export async function GET() {
   try {
@@ -9,6 +10,12 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cacheKey = cacheKeys.analytics(session.user.id);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const attempts = await prisma.testAttempt.findMany({
@@ -33,7 +40,7 @@ export async function GET() {
     });
 
     if (attempts.length === 0) {
-      return NextResponse.json({
+      const emptyPayload = {
         totalAttempts: 0,
         averageScore: 0,
         totalTime: 0,
@@ -42,7 +49,9 @@ export async function GET() {
         attempts: [],
         questionStats: [],
         attemptsWithTimes: [],
-      });
+      };
+      await setCache(cacheKey, emptyPayload);
+      return NextResponse.json(emptyPayload);
     }
 
     const totalAttempts = attempts.length;
@@ -133,7 +142,7 @@ export async function GET() {
       timeTakenSeconds: attempt.timeTakenSeconds || 0,
     }));
 
-    return NextResponse.json({
+    const payload = {
       totalAttempts,
       averageScore,
       totalTime,
@@ -142,7 +151,11 @@ export async function GET() {
       attempts: formattedAttempts,
       questionStats,
       attemptsWithTimes,
-    });
+    };
+
+    await setCache(cacheKey, payload);
+
+    return NextResponse.json(payload);
   } catch (error) {
     console.error("[v0] Error fetching analytics:", error);
     return NextResponse.json(

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { cachePrefixes, invalidateByPrefix } from "@/lib/redis";
 
 export async function POST(
   _request: NextRequest,
@@ -110,6 +111,13 @@ export async function POST(
         maxWait: 5000,
         timeout: 30000,
       }
+    );
+
+    // Evaluation changes the attempt, history and analytics payloads.
+    await invalidateByPrefix(
+      cachePrefixes.attempt,
+      cachePrefixes.history,
+      cachePrefixes.analytics
     );
 
     return NextResponse.json({ success: true, attemptId });

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { cachePrefixes, invalidateByPrefix } from "@/lib/redis";
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +48,15 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // A new attempt changes history, analytics and preset/collection attempt
+    // counts, so invalidate those cache families.
+    await invalidateByPrefix(
+      cachePrefixes.history,
+      cachePrefixes.analytics,
+      cachePrefixes.presets,
+      cachePrefixes.collection
+    );
 
     return NextResponse.json({ success: true, attemptId: attempt.id });
   } catch (error) {

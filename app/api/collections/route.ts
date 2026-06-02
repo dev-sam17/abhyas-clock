@@ -2,6 +2,24 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import {
+  cacheKeys,
+  cachePrefixes,
+  getCache,
+  invalidateByPrefix,
+  setCache,
+} from "@/lib/redis";
+
+// Collections are nested inside collection detail / chapter / preset payloads,
+// so any collection mutation invalidates those related caches too.
+async function invalidateCollectionCaches() {
+  await invalidateByPrefix(
+    cachePrefixes.collections,
+    cachePrefixes.collection,
+    cachePrefixes.chapters,
+    cachePrefixes.presets
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const collection = await prisma.collection.create({
+    const newCollection = await prisma.collection.create({
       data: {
         name,
         description: description || null,
@@ -40,7 +58,9 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(collection, { status: 201 });
+    await invalidateCollectionCaches();
+
+    return NextResponse.json(newCollection, { status: 201 });
   } catch (error) {
     console.error("Error creating collection:", error);
     return NextResponse.json(
@@ -56,6 +76,12 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cacheKey = cacheKeys.collections(session.user.id);
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
     }
 
     const collections = await prisma.collection.findMany({
@@ -83,6 +109,8 @@ export async function GET() {
         },
       },
     });
+
+    await setCache(cacheKey, collections);
 
     return NextResponse.json(collections);
   } catch (error) {
@@ -130,6 +158,8 @@ export async function DELETE(request: Request) {
     await prisma.collection.delete({
       where: { id: parseInt(id) },
     });
+
+    await invalidateCollectionCaches();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -182,6 +212,8 @@ export async function PUT(request: Request) {
         ...(isPublic !== undefined && { isPublic }),
       },
     });
+
+    await invalidateCollectionCaches();
 
     return NextResponse.json(updatedCollection);
   } catch (error) {

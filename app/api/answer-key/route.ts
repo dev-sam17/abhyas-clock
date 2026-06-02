@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { cachePrefixes, invalidateByPrefix } from "@/lib/redis";
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +108,14 @@ export async function POST(request: NextRequest) {
         maxWait: 5000, // 5 seconds to acquire connection
         timeout: 30000, // 30 seconds to complete transaction
       }
+    );
+
+    // Submitting an answer key evaluates the attempt, affecting attempt,
+    // history and analytics caches.
+    await invalidateByPrefix(
+      cachePrefixes.attempt,
+      cachePrefixes.history,
+      cachePrefixes.analytics
     );
 
     return NextResponse.json({
