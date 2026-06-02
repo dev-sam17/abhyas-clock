@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OMRInterface } from "@/components/omr-interface";
-import { Footer } from "@/components/footer";
 
 export default async function TakeTestPage({
   params,
@@ -23,10 +22,5 @@ export default async function TakeTestPage({
     notFound();
   }
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <OMRInterface preset={preset} />
-      <Footer />
-    </div>
-  );
+  return <OMRInterface preset={preset} />;
 }
