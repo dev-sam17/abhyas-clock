@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { CreatePresetForm } from "@/components/create-preset-form";
 import { BackButton } from "@/components/back-button";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 export default function CreatePresetPage() {
   return (
@@ -22,7 +24,9 @@ export default function CreatePresetPage() {
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-8 flex-1">
-        <CreatePresetForm />
+        <Suspense fallback={<LoadingSpinner message="Loading form..." />}>
+          <CreatePresetForm />
+        </Suspense>
       </main>
       <Footer />
     </div>
