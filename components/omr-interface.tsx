@@ -432,10 +432,10 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
 
   return (
     <>
-      <div className="min-h-screen bg-background p-2 sm:p-4 md:p-6">
-        <Card className="mx-auto max-w-6xl">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <header className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="h-screen overflow-hidden bg-background p-2 sm:p-4 md:p-6 flex flex-col">
+        <Card className="mx-auto w-full max-w-6xl flex flex-1 min-h-0 flex-col overflow-hidden">
+          <CardContent className="p-3 sm:p-4 md:p-6 flex flex-1 min-h-0 flex-col overflow-hidden">
+            <header className="shrink-0 mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
                 <h2 className="text-xl font-bold sm:text-2xl">{preset.name}</h2>
                 <p className="text-xs text-muted-foreground sm:text-sm">
@@ -493,10 +493,10 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
             </header>
 
             {/* Main Content */}
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex flex-1 min-h-0 flex-col lg:flex-row gap-4 overflow-hidden">
               {/* Question Area */}
-              <div className="flex-1">
-                <Card className="mb-4">
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <Card className="flex min-h-0 flex-col overflow-hidden">
                   <CardContent className="p-4 sm:p-6">
                     <div className="mb-6">
                       <h2 className="text-lg sm:text-xl font-semibold mb-4">
@@ -597,14 +597,14 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
               </div>
 
               {/* Question Palette Sidebar */}
-              <div className="lg:w-80 border-t lg:border-t-0 lg:border-l bg-card p-4 sm:p-6">
-                <div className="lg:sticky lg:top-24">
-                  <h3 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4">
+              <div className="lg:w-80 min-h-0 border-t lg:border-t-0 lg:border-l bg-card p-4 sm:p-6 flex flex-col overflow-hidden">
+                <div className="flex h-full min-h-0 flex-col">
+                  <h3 className="shrink-0 text-sm sm:text-base font-semibold mb-3 sm:mb-4">
                     Question Palette
                   </h3>
 
                   {/* Legend */}
-                  <div className="mb-4 sm:mb-6 space-y-2 text-xs sm:text-sm">
+                  <div className="shrink-0 mb-4 sm:mb-6 space-y-2 text-xs sm:text-sm">
                     <div className="flex items-center gap-2">
                       <div className="size-6 sm:size-8 rounded bg-green-500" />
                       <span>Answered ({answeredCount})</span>
@@ -620,7 +620,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                   </div>
 
                   {/* Question Numbers Grid */}
-                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 flex-1 min-h-0 overflow-y-auto px-1 pt-1">
                     {answers.map((answer, index) => {
                       const status = getQuestionStatus(answer);
                       return (
