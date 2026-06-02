@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BackButton } from "@/components/back-button";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
 import Link from "next/link";
@@ -115,8 +116,7 @@ export default function CollectionDetailPage() {
         const data = (await res.json()) as Collection;
         if (!cancelled) {
           setCollection(data);
-          // Expand all chapters by default
-          setExpandedChapters(new Set(data.chapters.map((ch) => ch.id)));
+          setExpandedChapters(new Set());
         }
       } catch (e) {
         if (!cancelled) {
@@ -180,7 +180,6 @@ export default function CollectionDetailPage() {
         if (res2.ok) {
           const data = await res2.json();
           setCollection(data);
-          setExpandedChapters(new Set(data.chapters.map((ch: Chapter) => ch.id)));
         }
       } else {
         const errData = await res.json();
@@ -243,7 +242,6 @@ export default function CollectionDetailPage() {
         if (res2.ok) {
           const data = await res2.json();
           setCollection(data);
-          setExpandedChapters(new Set(data.chapters.map((ch: Chapter) => ch.id)));
         }
       } else {
         toast.error("Failed to delete chapter");
@@ -263,26 +261,7 @@ export default function CollectionDetailPage() {
     ) || 0;
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-center gap-2">
-              <BackButton />
-              <HomeButton />
-            </div>
-          </div>
-        </header>
-        <main className="mx-auto max-w-9xl px-4 py-8 flex-1">
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <LoadingSpinner message="Loading collection..." />;
   }
 
   if (error || !collection) {
