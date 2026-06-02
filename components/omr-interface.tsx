@@ -620,7 +620,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                   </div>
 
                   {/* Question Numbers Grid */}
-                  <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 flex-1 min-h-0 overflow-y-auto px-1 pt-1">
+                  <div className="palette-scrollbar grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-2 flex-1 min-h-0 overflow-y-auto px-1 pt-1">
                     {answers.map((answer, index) => {
                       const status = getQuestionStatus(answer);
                       return (

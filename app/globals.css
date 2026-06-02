@@ -188,3 +188,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar for the question palette */
+@layer utilities {
+  .palette-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--primary) 45%, transparent)
+      transparent;
+  }
+
+  .palette-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .palette-scrollbar::-webkit-scrollbar-track {
+    background: color-mix(in oklab, var(--muted) 50%, transparent);
+    border-radius: 9999px;
+  }
+
+  .palette-scrollbar::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--primary) 45%, transparent);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .palette-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--primary) 70%, transparent);
+    background-clip: padding-box;
+  }
+}
