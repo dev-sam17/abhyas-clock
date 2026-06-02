@@ -432,10 +432,14 @@ export default function CollectionDetailPage() {
                   {isExpanded && (
                     <CardContent>
                       {chapter.presets.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No tests in this chapter yet. Add tests from the
-                          Create Test page.
-                        </p>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                          <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
+                            <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
+                              <PlusCircle className="size-6 text-muted-foreground mb-2" />
+                              <span className="text-xs font-medium text-muted-foreground">Add Test</span>
+                            </Card>
+                          </Link>
+                        </div>
                       ) : (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                           {chapter.presets.sort((a, b) => {
@@ -499,6 +503,12 @@ export default function CollectionDetailPage() {
                               </div>
                             </Card>
                           ))}
+                          <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
+                            <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
+                              <PlusCircle className="size-6 text-muted-foreground mb-2" />
+                              <span className="text-xs font-medium text-muted-foreground">Add Test</span>
+                            </Card>
+                          </Link>
                         </div>
                       )}
                     </CardContent>

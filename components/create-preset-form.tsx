@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,7 @@ import { Loader2 } from "lucide-react";
 
 export function CreatePresetForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [testName, setTestName] = useState("");
   const [totalQuestions, setTotalQuestions] = useState("");
@@ -37,8 +38,12 @@ export function CreatePresetForm() {
   const [timeLimitMinutes, setTimeLimitMinutes] = useState("");
   const [allowOvertime, setAllowOvertime] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
-  const [collectionId, setCollectionId] = useState<string>("none");
-  const [chapterId, setChapterId] = useState<string>("none");
+  const [collectionId, setCollectionId] = useState<string>(
+    searchParams.get("collectionId") ?? "none"
+  );
+  const [chapterId, setChapterId] = useState<string>(
+    searchParams.get("chapterId") ?? "none"
+  );
   const [collections, setCollections] = useState<any[]>([]);
 
   useEffect(() => {
