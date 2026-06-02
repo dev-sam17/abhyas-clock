@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { authClient } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ import {
   Lock,
   FolderOpen,
   BookOpen,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -243,6 +245,15 @@ export function PresetsList() {
                           Private
                         </Badge>
                       )}
+                      {isOwner && !preset.presetAnswerKey && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 px-2 py-1 border-amber-500/50 text-amber-600 dark:text-amber-400"
+                        >
+                          <KeyRound className="size-3" />
+                          No key
+                        </Badge>
+                      )}
                     </div>
                     <CardTitle className="text-xl font-bold leading-tight">
                       {preset.name}
@@ -290,6 +301,24 @@ export function PresetsList() {
                     <div className="flex gap-1">
                       {isOwner && (
                         <>
+                          <Link href={`/preset-answer-key/${preset.id}`}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className={cn(
+                                "h-8 w-8 p-0",
+                                !preset.presetAnswerKey &&
+                                  "text-amber-600 dark:text-amber-400"
+                              )}
+                              title={
+                                preset.presetAnswerKey
+                                  ? "Edit answer key"
+                                  : "Add answer key"
+                              }
+                            >
+                              <KeyRound className="size-4" />
+                            </Button>
+                          </Link>
                           <Button
                             size="sm"
                             variant="ghost"

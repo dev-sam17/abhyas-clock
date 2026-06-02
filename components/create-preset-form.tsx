@@ -119,8 +119,8 @@ export function CreatePresetForm() {
       }
 
       const data = await response.json();
-      toast.success("Test created successfully!");
-      router.push("/presets");
+      toast.success("Test created! Now add the answer key.");
+      router.push(`/preset-answer-key/${data.id}`);
     } catch (error) {
       console.error("[v0] Error creating preset:", error);
       toast.error("Failed to create test. Please try again.");

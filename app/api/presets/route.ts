@@ -138,6 +138,9 @@ export async function GET() {
         _count: {
           select: { attempts: true },
         },
+        presetAnswerKey: {
+          select: { id: true },
+        },
         chapter: {
           include: {
             collection: {
