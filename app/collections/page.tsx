@@ -263,7 +263,7 @@ export default function CollectionsPage() {
               <FolderOpen className="size-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No collections yet</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Create your first collection to organize your test presets into
+                Create your first collection to organize your tests into
                 chapters
               </p>
               <Button onClick={() => setShowCreateDialog(true)}>
@@ -397,8 +397,7 @@ export default function CollectionsPage() {
           <DialogHeader>
             <DialogTitle>Create Collection</DialogTitle>
             <DialogDescription>
-              Create a new collection with chapters to organize your test
-              presets
+              Create a new collection with chapters to organize your tests
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -563,7 +562,7 @@ export default function CollectionsPage() {
             <AlertDialogTitle>Delete Collection</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this collection? All chapters will
-              be deleted. The test presets in the chapters will not be deleted,
+              be deleted. The tests in the chapters will not be deleted,
               they will just be unlinked.
             </AlertDialogDescription>
           </AlertDialogHeader>

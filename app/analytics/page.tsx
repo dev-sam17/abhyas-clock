@@ -110,7 +110,7 @@ export default function AnalyticsPage() {
                 Complete and evaluate a test to see analytics
               </p>
               <Link href="/presets">
-                <Button>Browse Test Presets</Button>
+                <Button>Browse Tests</Button>
               </Link>
             </CardContent>
           </Card>

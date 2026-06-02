@@ -115,18 +115,18 @@ export default function HomePage() {
                   <PlusCircle className="size-6" />
                 </div>
                 <div>
-                  <CardTitle>Create Preset</CardTitle>
+                  <CardTitle>Create Test</CardTitle>
                   <CardDescription>Set up test configuration</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
-                Define test presets with question count, time limits, and test
+                Define tests with question count, time limits, and test
                 modes for OMR answer entry.
               </p>
               <Link href="/create-preset">
-                <Button className="w-full">Create New Preset</Button>
+                <Button className="w-full">Create New Test</Button>
               </Link>
             </CardContent>
           </Card>
@@ -145,12 +145,12 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
-                Select a test preset and use the online OMR sheet to enter
+                Select a test and use the online OMR sheet to enter
                 answers from your offline exam.
               </p>
               <Link href="/presets">
                 <Button className="w-full" variant="secondary">
-                  Browse Presets
+                  Browse Tests
                 </Button>
               </Link>
             </CardContent>
@@ -189,13 +189,13 @@ export default function HomePage() {
                 </div>
                 <div>
                   <CardTitle>Collections</CardTitle>
-                  <CardDescription>Organize presets</CardDescription>
+                  <CardDescription>Organize tests</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
-                Create and manage collections to organize your test presets into
+                Create and manage collections to organize your tests into
                 chapters and modules.
               </p>
               <Link href="/collections">

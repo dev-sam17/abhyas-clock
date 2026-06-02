@@ -119,11 +119,11 @@ export function CreatePresetForm() {
       }
 
       const data = await response.json();
-      toast.success("Test preset created successfully!");
+      toast.success("Test created successfully!");
       router.push("/presets");
     } catch (error) {
       console.error("[v0] Error creating preset:", error);
-      toast.error("Failed to create test preset. Please try again.");
+      toast.error("Failed to create test. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +136,7 @@ export function CreatePresetForm() {
       <CardHeader>
         <CardTitle>Test Configuration</CardTitle>
         <CardDescription>
-          Create a test preset that defines the structure and timing for your
+          Create a test that defines the structure and timing for your
           OMR answer entry
         </CardDescription>
       </CardHeader>
@@ -313,9 +313,9 @@ export function CreatePresetForm() {
           {/* Public/Private Toggle */}
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="isPublic">Public Preset</Label>
+              <Label htmlFor="isPublic">Public Test</Label>
               <p className="text-sm text-muted-foreground">
-                Make this preset available for all users to attempt
+                Make this test available for all users to attempt
               </p>
             </div>
             <Switch
@@ -387,10 +387,10 @@ export function CreatePresetForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creating Preset...
+                Creating Test...
               </>
             ) : (
-              "Create Test Preset"
+              "Create Test"
             )}
           </Button>
         </form>

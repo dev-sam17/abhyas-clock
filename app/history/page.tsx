@@ -148,7 +148,7 @@ export default function HistoryPage() {
                 Take a test to see your history here
               </p>
               <Link href="/presets">
-                <Button>Browse Test Presets</Button>
+                <Button>Browse Tests</Button>
               </Link>
             </CardContent>
           </Card>

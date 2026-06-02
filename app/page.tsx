@@ -321,7 +321,7 @@ export default function LandingPage() {
             {[
               {
                 step: "01",
-                title: "Create Test Preset",
+                title: "Create Test",
                 description:
                   "Define test name, question count, starting number, and choose timer or stopwatch mode",
                 image: "/images/create-test-preset.png",

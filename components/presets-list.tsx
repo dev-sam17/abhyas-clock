@@ -96,7 +96,7 @@ export function PresetsList() {
       }
     } catch (error) {
       console.error("Error fetching presets:", error);
-      toast.error("Failed to load presets");
+      toast.error("Failed to load tests");
     } finally {
       setLoading(false);
     }
@@ -121,14 +121,14 @@ export function PresetsList() {
       });
 
       if (response.ok) {
-        toast.success("Preset deleted successfully");
+        toast.success("Test deleted successfully");
         setPresets(presets.filter((p) => p.id !== id));
       } else {
-        toast.error("Failed to delete preset");
+        toast.error("Failed to delete test");
       }
     } catch (error) {
       console.error("Error deleting preset:", error);
-      toast.error("Failed to delete preset");
+      toast.error("Failed to delete test");
     } finally {
       setDeleteId(null);
     }
@@ -168,20 +168,20 @@ export function PresetsList() {
       });
 
       if (response.ok) {
-        toast.success("Preset updated successfully");
+        toast.success("Test updated successfully");
         fetchPresets();
         setEditPreset(null);
       } else {
-        toast.error("Failed to update preset");
+        toast.error("Failed to update test");
       }
     } catch (error) {
       console.error("Error updating preset:", error);
-      toast.error("Failed to update preset");
+      toast.error("Failed to update test");
     }
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading presets..." />;
+    return <LoadingSpinner message="Loading tests..." />;
   }
 
   return (
@@ -190,14 +190,14 @@ export function PresetsList() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="size-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No test presets yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No tests yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create your first test preset to get started
+              Create your first test to get started
             </p>
             <Link href="/create-preset">
               <Button>
                 <PlusCircle className="mr-2 size-4" />
-                Create Preset
+                Create Test
               </Button>
             </Link>
           </CardContent>
@@ -326,10 +326,10 @@ export function PresetsList() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Preset</AlertDialogTitle>
+            <AlertDialogTitle>Delete Test</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this preset? This action cannot be
-              undone. All attempts associated with this preset will also be
+              Are you sure you want to delete this test? This action cannot be
+              undone. All attempts associated with this test will also be
               deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -350,8 +350,8 @@ export function PresetsList() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Preset</DialogTitle>
-            <DialogDescription>Update preset details</DialogDescription>
+            <DialogTitle>Edit Test</DialogTitle>
+            <DialogDescription>Update test details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -405,9 +405,9 @@ export function PresetsList() {
             )}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="edit-public">Public Preset</Label>
+                <Label htmlFor="edit-public">Public Test</Label>
                 <p className="text-sm text-muted-foreground">
-                  Make this preset available to all users
+                  Make this test available to all users
                 </p>
               </div>
               <Switch

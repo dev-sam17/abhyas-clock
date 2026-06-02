@@ -21,16 +21,16 @@ export default function PresetsPage() {
             <Link href="/create-preset">
               <Button size="sm" className="text-xs sm:text-sm">
                 <PlusCircle className="mr-1 size-3 sm:mr-2 sm:size-4" />
-                <span className="hidden sm:inline">Create Preset</span>
+                <span className="hidden sm:inline">Create Test</span>
                 <span className="sm:hidden">Create</span>
               </Button>
             </Link>
           </div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Test Presets
+            Tests
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-            Choose a test preset to start practicing
+            Choose a test to start practicing
           </p>
         </div>
       </header>

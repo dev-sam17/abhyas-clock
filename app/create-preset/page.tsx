@@ -13,7 +13,7 @@ export default function CreatePresetPage() {
             <HomeButton />
           </div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Create Test Preset
+            Create Test
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             Set up a new test configuration

@@ -381,7 +381,7 @@ export default function CollectionDetailPage() {
                 No chapters in this collection yet
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Add chapters to organize your test presets
+                Add chapters to organize your tests
               </p>
               <Button
                 onClick={() => {
@@ -455,7 +455,7 @@ export default function CollectionDetailPage() {
                       {chapter.presets.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-4">
                           No tests in this chapter yet. Add tests from the
-                          Create Preset page.
+                          Create Test page.
                         </p>
                       ) : (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
