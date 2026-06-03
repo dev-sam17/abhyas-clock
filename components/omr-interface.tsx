@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Clock, Timer, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Timer, Loader2, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type TestPreset = {
@@ -358,6 +358,22 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
 
   const timeRemaining = getTimeRemaining();
   const isTimerMode = preset.testMode === "timer";
+  const isStopwatchMode = preset.testMode === "stopwatch";
+  const isPaused = isStopwatchMode && !isRunning && !isSubmitting && testStarted;
+
+  const togglePause = () => {
+    if (isRunning) {
+      // Pausing: save accumulated time for the current question
+      if (currentQuestion) {
+        trackQuestionTime(currentQuestion.questionNumber);
+      }
+      setIsRunning(false);
+    } else {
+      // Resuming: reset the question start time so pause duration isn't counted
+      setCurrentQuestionStartTime(Date.now());
+      setIsRunning(true);
+    }
+  };
 
   const handleStartTest = () => {
     setTestStarted(true);
@@ -469,9 +485,32 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                       {preset.testMode === "stopwatch" && (
                         <div className="flex items-center gap-1.5 sm:gap-2">
                           <Clock className="size-4 sm:size-5" />
-                          <span className="text-base font-bold sm:text-lg">
+                          <span className={cn(
+                            "text-base font-bold sm:text-lg",
+                            !isRunning && !isSubmitting && "text-muted-foreground"
+                          )}>
                             {formatTime(seconds)}
                           </span>
+                          {!isSubmitting && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 sm:size-8"
+                              onClick={togglePause}
+                              title={isRunning ? "Pause" : "Resume"}
+                            >
+                              {isRunning ? (
+                                <Pause className="size-3.5 sm:size-4" />
+                              ) : (
+                                <Play className="size-3.5 sm:size-4" />
+                              )}
+                            </Button>
+                          )}
+                          {!isRunning && !isSubmitting && (
+                            <Badge variant="secondary" className="text-xs">
+                              Paused
+                            </Badge>
+                          )}
                         </div>
                       )}
                     </div>
@@ -509,12 +548,13 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                           {["A", "B", "C", "D", "E"].map((option) => (
                             <div
                               key={option}
-                              onClick={() => selectAnswer(option)}
+                              onClick={() => !isPaused && selectAnswer(option)}
                               className={cn(
-                                "flex items-center space-x-3 rounded-lg border-2 p-3 sm:p-4 cursor-pointer transition-all",
+                                "flex items-center space-x-3 rounded-lg border-2 p-3 sm:p-4 transition-all",
+                                isPaused ? "cursor-not-allowed opacity-50" : "cursor-pointer",
                                 currentQuestion?.selectedAnswer === option
                                   ? "border-primary bg-primary/10"
-                                  : "border-border hover:border-primary/50"
+                                  : isPaused ? "border-border" : "border-border hover:border-primary/50"
                               )}
                             >
                               <div
@@ -541,6 +581,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                           onChange={(e) => setTextAnswer(e.target.value)}
                           placeholder="Enter your answer"
                           className="text-base sm:text-lg"
+                          disabled={isPaused}
                         />
                       )}
                     </div>
@@ -552,6 +593,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                           onClick={markForReview}
                           variant="outline"
                           size="sm"
+                          disabled={isPaused}
                           className="flex-1 sm:flex-none text-xs sm:text-sm"
                         >
                           {currentQuestion?.markedForReview ? "Unmark" : "Mark"}
@@ -560,6 +602,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                           onClick={clearResponse}
                           variant="outline"
                           size="sm"
+                          disabled={isPaused}
                           className="flex-1 sm:flex-none text-xs sm:text-sm"
                         >
                           Clear
@@ -569,7 +612,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                       <div className="flex gap-2">
                         <Button
                           onClick={goToPrevious}
-                          disabled={currentQuestionIndex === 0}
+                          disabled={currentQuestionIndex === 0 || isPaused}
                           variant="outline"
                           size="sm"
                           className="flex-1 sm:flex-none text-xs sm:text-sm"
@@ -581,7 +624,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                         <Button
                           onClick={saveAndNext}
                           disabled={
-                            currentQuestionIndex === preset.totalQuestions - 1
+                            currentQuestionIndex === preset.totalQuestions - 1 || isPaused
                           }
                           size="sm"
                           className="flex-1 sm:flex-none text-xs sm:text-sm"
@@ -626,7 +669,8 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                       return (
                         <button
                           key={index}
-                          onClick={() => goToQuestion(index)}
+                          onClick={() => !isPaused && goToQuestion(index)}
+                          disabled={isPaused}
                           className={cn(
                             "size-10 sm:size-12 rounded text-sm sm:text-base font-semibold transition-all",
                             currentQuestionIndex === index &&
