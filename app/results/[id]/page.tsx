@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react";
-import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
+import { CheckCircle, XCircle, Clock, Award, AlertCircle, ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/footer";
 
 type Attempt = {
@@ -106,8 +104,11 @@ export default function ResultsPage() {
         <header className="border-b border-border bg-card">
           <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <BackButton />
-              <HomeButton />
+              <Link href="/home">
+                <Button variant="ghost" size="icon" title="Go to home">
+                  <ArrowLeft className="size-5" />
+                </Button>
+              </Link>
             </div>
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
               Test Results
@@ -132,8 +133,11 @@ export default function ResultsPage() {
         <header className="border-b border-border bg-card">
           <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <BackButton />
-              <HomeButton />
+              <Link href="/home">
+                <Button variant="ghost" size="icon" title="Go to home">
+                  <ArrowLeft className="size-5" />
+                </Button>
+              </Link>
             </div>
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
               Test Results
@@ -159,8 +163,11 @@ export default function ResultsPage() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <BackButton />
-            <HomeButton />
+            <Link href="/home">
+                <Button variant="ghost" size="icon" title="Go to home">
+                  <ArrowLeft className="size-5" />
+                </Button>
+              </Link>
           </div>
           <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
             Test Results
