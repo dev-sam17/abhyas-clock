@@ -67,6 +67,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
           questionTimes: savedTimes,
           currentQuestionIndex: savedIndex,
           isOvertime: savedOvertime,
+          isPaused: savedIsPaused,
         } = JSON.parse(savedState);
         setSeconds(savedSeconds);
         if (savedAnswers) setAnswers(savedAnswers);
@@ -84,7 +85,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
         restoredFromCache.current = true;
         setTestStarted(true);
         setShowDisclaimerDialog(false);
-        setIsRunning(true);
+        setIsRunning(!savedIsPaused);
       } catch (e) {
         console.error("Failed to restore test state", e);
       }
@@ -100,10 +101,11 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
         questionTimes: Object.fromEntries(questionTimes),
         currentQuestionIndex,
         isOvertime,
+        isPaused: preset.testMode === "stopwatch" && !isRunning && !isSubmitting,
       };
       localStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
     }
-  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, testStarted, preset.id]);
+  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode]);
 
   // Disable right-click and browser navigation during test
   useEffect(() => {
