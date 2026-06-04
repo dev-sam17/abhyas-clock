@@ -71,12 +71,37 @@ export function PresetsList() {
   const [editTimeLimitMinutes, setEditTimeLimitMinutes] = useState<number>(60);
   const [editAllowOvertime, setEditAllowOvertime] = useState(false);
   const [userId, setUserId] = useState<string>("");
+  const [inProgressTests, setInProgressTests] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchPresets();
     fetchCollections();
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const inProgress: Record<number, boolean> = {};
+      presets.forEach((preset) => {
+        if (localStorage.getItem(`test-${preset.id}`)) {
+          inProgress[preset.id] = true;
+        }
+      });
+      setInProgressTests(inProgress);
+    }
+  }, [presets]);
+
+  const handleDiscardProgress = (presetId: number) => {
+    if (confirm("Are you sure you want to discard your saved progress for this test? This cannot be undone.")) {
+      localStorage.removeItem(`test-${presetId}`);
+      setInProgressTests((prev) => {
+        const next = { ...prev };
+        delete next[presetId];
+        return next;
+      });
+      toast.success("Progress reset successfully");
+    }
+  };
 
   const fetchUser = async () => {
     try {
@@ -215,7 +240,15 @@ export function PresetsList() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2 flex-wrap">
+                      {inProgressTests[preset.id] && (
+                        <Badge
+                          variant="default"
+                          className="bg-amber-500 hover:bg-amber-600 animate-pulse text-white gap-1 px-2 py-1"
+                        >
+                          In Progress
+                        </Badge>
+                      )}
                       <Badge
                         variant={
                           preset.testMode === "timer" ? "default" : "secondary"
@@ -337,9 +370,28 @@ export function PresetsList() {
                           </Button>
                         </>
                       )}
-                      <Link href={`/take-test/${preset.id}`}>
-                        <Button size="sm">Take Test</Button>
-                      </Link>
+                      {inProgressTests[preset.id] ? (
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive border-destructive hover:bg-destructive/10 text-xs px-2 h-9"
+                            onClick={() => handleDiscardProgress(preset.id)}
+                            title="Discard progress and start fresh"
+                          >
+                            Reset
+                          </Button>
+                          <Link href={`/take-test/${preset.id}`}>
+                            <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 h-9">
+                              Resume
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <Link href={`/take-test/${preset.id}`}>
+                          <Button size="sm">Take Test</Button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </CardContent>

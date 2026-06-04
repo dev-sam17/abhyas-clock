@@ -17,17 +17,44 @@ import {
   LogOut,
   User,
   FolderOpen,
+  Clock,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Footer } from "@/components/footer";
+import { toast } from "sonner";
 
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTests, setActiveTests] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const active: { id: number; name: string }[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("test-")) {
+          const id = parseInt(key.replace("test-", ""));
+          if (!isNaN(id)) {
+            try {
+              const state = JSON.parse(localStorage.getItem(key) || "{}");
+              active.push({
+                id,
+                name: state.presetName || `Test #${id}`,
+              });
+            } catch (e) {
+              active.push({ id, name: `Test #${id}` });
+            }
+          }
+        }
+      }
+      setActiveTests(active);
+    }
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,6 +80,14 @@ export default function HomePage() {
   const handleSignOut = async () => {
     await authClient.signOut();
     router.push("/");
+  };
+
+  const handleDiscardHomeProgress = (presetId: number) => {
+    if (confirm("Are you sure you want to discard your saved progress for this test? This cannot be undone.")) {
+      localStorage.removeItem(`test-${presetId}`);
+      setActiveTests(prev => prev.filter(t => t.id !== presetId));
+      toast.success("Progress reset successfully");
+    }
   };
 
   if (loading) {
@@ -107,6 +142,45 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-12 flex-1">
+        {activeTests.length > 0 && (
+          <div className="mb-8 space-y-4">
+            {activeTests.map((test) => (
+              <Card key={test.id} className="border-amber-500/50 bg-amber-500/5 dark:bg-amber-950/10 border-2">
+                <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500 text-white animate-pulse shrink-0">
+                      <Clock className="size-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-amber-800 dark:text-amber-300">
+                        Test in Progress: {test.name}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        You have an unfinished attempt for this test.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive border-destructive hover:bg-destructive/10 text-xs sm:text-sm"
+                      onClick={() => handleDiscardHomeProgress(test.id)}
+                    >
+                      Discard
+                    </Button>
+                    <Link href={`/take-test/${test.id}`}>
+                      <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm">
+                        Resume Test
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="transition-shadow hover:shadow-lg">
             <CardHeader>

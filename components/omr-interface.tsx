@@ -102,10 +102,11 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
         currentQuestionIndex,
         isOvertime,
         isPaused: preset.testMode === "stopwatch" && !isRunning && !isSubmitting,
+        presetName: preset.name,
       };
       localStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
     }
-  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode]);
+  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode, preset.name]);
 
   // Disable right-click and browser navigation during test
   useEffect(() => {
