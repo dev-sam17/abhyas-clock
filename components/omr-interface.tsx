@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,15 +54,19 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
   const [currentQuestionStartTime, setCurrentQuestionStartTime] =
     useState<number>(Date.now());
 
-  // Load persisted state from sessionStorage
+  const restoredFromCache = useRef(false);
+
+  // Load persisted state from localStorage
   useEffect(() => {
-    const savedState = sessionStorage.getItem(`test-${preset.id}`);
+    const savedState = localStorage.getItem(`test-${preset.id}`);
     if (savedState) {
       try {
         const {
           seconds: savedSeconds,
           answers: savedAnswers,
           questionTimes: savedTimes,
+          currentQuestionIndex: savedIndex,
+          isOvertime: savedOvertime,
         } = JSON.parse(savedState);
         setSeconds(savedSeconds);
         if (savedAnswers) setAnswers(savedAnswers);
@@ -75,6 +79,9 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
               ])
             )
           );
+        if (typeof savedIndex === "number") setCurrentQuestionIndex(savedIndex);
+        if (savedOvertime) setIsOvertime(true);
+        restoredFromCache.current = true;
         setTestStarted(true);
         setShowDisclaimerDialog(false);
         setIsRunning(true);
@@ -84,17 +91,19 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
     }
   }, [preset.id]);
 
-  // Persist state to sessionStorage
+  // Persist state to localStorage
   useEffect(() => {
     if (testStarted) {
       const state = {
         seconds,
         answers,
         questionTimes: Object.fromEntries(questionTimes),
+        currentQuestionIndex,
+        isOvertime,
       };
-      sessionStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
+      localStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
     }
-  }, [seconds, answers, questionTimes, testStarted, preset.id]);
+  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, testStarted, preset.id]);
 
   // Disable right-click and browser navigation during test
   useEffect(() => {
@@ -131,8 +140,9 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
     };
   }, [testStarted]);
 
-  // Initialize answers
+  // Initialize answers (only if not restored from cache)
   useEffect(() => {
+    if (restoredFromCache.current) return;
     const initialAnswers: Answer[] = [];
     for (let i = 0; i < preset.totalQuestions; i++) {
       initialAnswers.push({
@@ -326,7 +336,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
 
       const data = await response.json();
       // Clear saved state after successful submission
-      sessionStorage.removeItem(`test-${preset.id}`);
+      localStorage.removeItem(`test-${preset.id}`);
       toast.success("Answers submitted successfully!");
       router.replace(`/enter-key/${data.attemptId}`);
     } catch (error) {
