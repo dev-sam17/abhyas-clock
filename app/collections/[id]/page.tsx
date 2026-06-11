@@ -375,7 +375,35 @@ export default function CollectionDetailPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {collection.chapters.map((chapter) => {
+            {[...collection.chapters]
+              .sort((a, b) => {
+                // Natural sort: split chapterNumber into numeric/alpha segments
+                const parseChapterNumber = (s: string) => {
+                  const parts: (string | number)[] = [];
+                  for (const match of s.match(/(\d+|[a-zA-Z]+)/g) || []) {
+                    parts.push(/^\d+$/.test(match) ? parseInt(match, 10) : match.toLowerCase());
+                  }
+                  return parts;
+                };
+                const aParts = parseChapterNumber(a.chapterNumber);
+                const bParts = parseChapterNumber(b.chapterNumber);
+                for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                  const ap = aParts[i];
+                  const bp = bParts[i];
+                  if (ap === undefined) return -1;
+                  if (bp === undefined) return 1;
+                  if (typeof ap === "number" && typeof bp === "number") {
+                    if (ap !== bp) return ap - bp;
+                  } else if (typeof ap === "string" && typeof bp === "string") {
+                    if (ap !== bp) return ap < bp ? -1 : 1;
+                  } else {
+                    // number before string
+                    return typeof ap === "number" ? -1 : 1;
+                  }
+                }
+                return 0;
+              })
+              .map((chapter) => {
               const isExpanded = expandedChapters.has(chapter.id);
               return (
                 <Card key={chapter.id}>
