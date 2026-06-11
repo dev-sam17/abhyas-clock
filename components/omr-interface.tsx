@@ -233,9 +233,9 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
       prev.map((ans, idx) =>
         idx === currentQuestionIndex
           ? {
-              ...ans,
-              selectedAnswer: ans.selectedAnswer === option ? null : option,
-            }
+            ...ans,
+            selectedAnswer: ans.selectedAnswer === option ? null : option,
+          }
           : ans
       )
     );
@@ -398,7 +398,7 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
   // Show disclaimer before test starts
   if (!testStarted) {
     return (
-      <Dialog open={showDisclaimerDialog} onOpenChange={() => {}}>
+      <Dialog open={showDisclaimerDialog} onOpenChange={() => { }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">
@@ -687,15 +687,15 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
                           className={cn(
                             "size-10 sm:size-12 rounded text-sm sm:text-base font-semibold transition-all",
                             currentQuestionIndex === index &&
-                              "ring-2 ring-primary ring-offset-2",
+                            "ring-2 ring-primary ring-offset-2",
                             status === "answered" &&
-                              "bg-green-500 text-white hover:bg-green-600",
+                            "bg-green-500 text-white hover:bg-green-600",
                             status === "marked" &&
-                              "bg-orange-500 text-white hover:bg-orange-600",
+                            "bg-orange-500 text-white hover:bg-orange-600",
                             status === "marked-answered" &&
-                              "bg-purple-500 text-white hover:bg-purple-600",
+                            "bg-purple-500 text-white hover:bg-purple-600",
                             status === "not-answered" &&
-                              "bg-muted hover:bg-muted/80"
+                            "bg-muted hover:bg-muted/80"
                           )}
                         >
                           {answer.questionNumber}
