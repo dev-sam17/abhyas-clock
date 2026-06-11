@@ -404,146 +404,146 @@ export default function CollectionDetailPage() {
                 return 0;
               })
               .map((chapter) => {
-              const isExpanded = expandedChapters.has(chapter.id);
-              return (
-                <Card key={chapter.id}>
-                  <CardHeader
-                    className="cursor-pointer select-none"
-                    onClick={() => toggleChapter(chapter.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {isExpanded ? (
-                          <ChevronDown className="size-5 text-muted-foreground" />
+                const isExpanded = expandedChapters.has(chapter.id);
+                return (
+                  <Card key={chapter.id}>
+                    <CardHeader
+                      className="cursor-pointer select-none"
+                      onClick={() => toggleChapter(chapter.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {isExpanded ? (
+                            <ChevronDown className="size-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="size-5 text-muted-foreground" />
+                          )}
+                          <BookOpen className="size-5 text-primary" />
+                          <CardTitle className="text-lg">
+                            Chapter {chapter.chapterNumber}: {chapter.name}
+                          </CardTitle>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {chapter.presets.length} test
+                            {chapter.presets.length !== 1 ? "s" : ""}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditChapter(chapter);
+                              setEditChapterName(chapter.name);
+                              setEditChapterNumber(
+                                String(chapter.chapterNumber)
+                              );
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteChapterId(chapter.id);
+                            }}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {isExpanded && (
+                      <CardContent>
+                        {chapter.presets.length === 0 ? (
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                            <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
+                              <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
+                                <PlusCircle className="size-6 text-muted-foreground mb-2" />
+                                <span className="text-xs font-medium text-muted-foreground">Add Test</span>
+                              </Card>
+                            </Link>
+                          </div>
                         ) : (
-                          <ChevronRight className="size-5 text-muted-foreground" />
-                        )}
-                        <BookOpen className="size-5 text-primary" />
-                        <CardTitle className="text-lg">
-                          Chapter {chapter.chapterNumber}: {chapter.name}
-                        </CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {chapter.presets.length} test
-                          {chapter.presets.length !== 1 ? "s" : ""}
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditChapter(chapter);
-                            setEditChapterName(chapter.name);
-                            setEditChapterNumber(
-                              String(chapter.chapterNumber)
-                            );
-                          }}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteChapterId(chapter.id);
-                          }}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  {isExpanded && (
-                    <CardContent>
-                      {chapter.presets.length === 0 ? (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                          <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
-                            <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
-                              <PlusCircle className="size-6 text-muted-foreground mb-2" />
-                              <span className="text-xs font-medium text-muted-foreground">Add Test</span>
-                            </Card>
-                          </Link>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                          {chapter.presets.sort((a, b) => {
-                            const aNum = Number(a.name.split(" ")[0]);
-                            const bNum = Number(b.name.split(" ")[0]);
-                            return aNum - bNum;
-                          }).map((preset) => (
-                            <Card
-                              key={preset.id}
-                              className="relative overflow-hidden group flex flex-col justify-between p-3.5 hover:shadow-md hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 border bg-gradient-to-b from-card to-card/60 rounded-xl min-h-[135px]"
-                            >
-                              <div className="space-y-2">
-                                {/* Badges Header */}
-                                <div className="flex items-center justify-between gap-2">
-                                  <Badge
-                                    variant={preset.testMode === "timer" ? "default" : "secondary"}
-                                    className="text-[9px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold shrink-0"
-                                  >
-                                    {preset.testMode === "timer" ? (
-                                      <span className="flex items-center gap-0.5"><Timer className="size-2.5" /> Timer</span>
-                                    ) : (
-                                      <span className="flex items-center gap-0.5"><Clock className="size-2.5" /> Static</span>
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                            {chapter.presets.sort((a, b) => {
+                              const aNum = Number(a.name.split(" ")[0]);
+                              const bNum = Number(b.name.split(" ")[0]);
+                              return aNum - bNum;
+                            }).map((preset) => (
+                              <Card
+                                key={preset.id}
+                                className="relative overflow-hidden group flex flex-col justify-between p-3.5 hover:shadow-md hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 border bg-gradient-to-b from-card to-card/60 rounded-xl min-h-[135px]"
+                              >
+                                <div className="space-y-2">
+                                  {/* Badges Header */}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <Badge
+                                      variant={preset.testMode === "timer" ? "default" : "secondary"}
+                                      className="text-[9px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold shrink-0"
+                                    >
+                                      {preset.testMode === "timer" ? (
+                                        <span className="flex items-center gap-0.5"><Timer className="size-2.5" /> Timer</span>
+                                      ) : (
+                                        <span className="flex items-center gap-0.5"><Clock className="size-2.5" /> Static</span>
+                                      )}
+                                    </Badge>
+
+                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-border/60 shrink-0">
+                                      {preset.isPublic ? "Public" : "Private"}
+                                    </Badge>
+                                  </div>
+
+                                  {/* Test Name */}
+                                  <h4 className="text-sm font-bold text-foreground line-clamp-1 tracking-tight leading-snug group-hover:text-primary transition-colors">
+                                    {preset.name}
+                                  </h4>
+
+                                  {/* Questions & Time info */}
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground font-medium">
+                                    <span className="flex items-center gap-1">
+                                      <FileText className="size-3" /> {preset.totalQuestions} Qs
+                                    </span>
+                                    {preset.testMode === "timer" && preset.timeLimitMinutes && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-0.5">
+                                          <Timer className="size-3" /> {preset.timeLimitMinutes} min
+                                        </span>
+                                      </>
                                     )}
-                                  </Badge>
-
-                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-border/60 shrink-0">
-                                    {preset.isPublic ? "Public" : "Private"}
-                                  </Badge>
+                                  </div>
                                 </div>
 
-                                {/* Test Name */}
-                                <h4 className="text-sm font-bold text-foreground line-clamp-1 tracking-tight leading-snug group-hover:text-primary transition-colors">
-                                  {preset.name}
-                                </h4>
-
-                                {/* Questions & Time info */}
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground font-medium">
-                                  <span className="flex items-center gap-1">
-                                    <FileText className="size-3" /> {preset.totalQuestions} Qs
+                                <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-border/20 mt-1 shrink-0">
+                                  <span className="text-[10px] text-muted-foreground font-medium">
+                                    {preset._count.attempts} attempt{preset._count.attempts !== 1 ? "s" : ""}
                                   </span>
-                                  {preset.testMode === "timer" && preset.timeLimitMinutes && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="flex items-center gap-0.5">
-                                        <Timer className="size-3" /> {preset.timeLimitMinutes} min
-                                      </span>
-                                    </>
-                                  )}
+                                  <Link href={`/take-test/${preset.id}`}>
+                                    <Button size="sm" className="h-7 text-xs px-3 font-semibold shadow-sm hover:scale-[1.03] transition-transform">
+                                      Take Test
+                                    </Button>
+                                  </Link>
                                 </div>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-border/20 mt-1 shrink-0">
-                                <span className="text-[10px] text-muted-foreground font-medium">
-                                  {preset._count.attempts} attempt{preset._count.attempts !== 1 ? "s" : ""}
-                                </span>
-                                <Link href={`/take-test/${preset.id}`}>
-                                  <Button size="sm" className="h-7 text-xs px-3 font-semibold shadow-sm hover:scale-[1.03] transition-transform">
-                                    Take Test
-                                  </Button>
-                                </Link>
-                              </div>
-                            </Card>
-                          ))}
-                          <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
-                            <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
-                              <PlusCircle className="size-6 text-muted-foreground mb-2" />
-                              <span className="text-xs font-medium text-muted-foreground">Add Test</span>
-                            </Card>
-                          </Link>
-                        </div>
-                      )}
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
+                              </Card>
+                            ))}
+                            <Link href={`/create-preset?collectionId=${collection.id}&chapterId=${chapter.id}`}>
+                              <Card className="flex flex-col items-center justify-center p-3.5 border-dashed border-2 border-border/50 hover:border-primary/50 hover:shadow-md hover:scale-[1.01] transition-all duration-200 rounded-xl min-h-[135px] cursor-pointer bg-transparent">
+                                <PlusCircle className="size-6 text-muted-foreground mb-2" />
+                                <span className="text-xs font-medium text-muted-foreground">Add Test</span>
+                              </Card>
+                            </Link>
+                          </div>
+                        )}
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
           </div>
         )}
       </main>
