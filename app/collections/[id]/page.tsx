@@ -11,6 +11,7 @@ import { BackButton } from "@/components/back-button";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 import Link from "next/link";
 import {
   FileText,
@@ -267,11 +268,11 @@ export default function CollectionDetailPage() {
   if (error || !collection) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
+        <Navbar />
+        <header className="border-b border-border/40 bg-card/50">
+          <div className="mx-auto max-w-9xl px-4 py-4">
             <div className="flex items-center gap-2">
               <BackButton />
-              <HomeButton />
             </div>
           </div>
         </header>
@@ -291,23 +292,23 @@ export default function CollectionDetailPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-            <div className="flex items-center gap-2">
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-9xl px-4 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
               <BackButton />
-              <HomeButton />
               <div>
-                <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {collection.name}
                 </h1>
-                <p className="text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {collection.description ||
                     "View all chapters and tests in this collection"}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant={collection.isPublic ? "default" : "secondary"}>
                 {collection.isPublic ? (
                   <>
@@ -337,14 +338,15 @@ export default function CollectionDetailPage() {
                   );
                   setShowAddChapter(true);
                 }}
+                className="gap-1"
               >
-                <PlusCircle className="mr-1 size-3" />
+                <PlusCircle className="size-4" />
                 Add Chapter
               </Button>
             </div>
           </div>
           {collection.user && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-2 pl-12">
               Created by {collection.user.name}
             </p>
           )}

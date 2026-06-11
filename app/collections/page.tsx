@@ -26,11 +26,10 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { toast } from "sonner";
+import { Navbar } from "@/components/navbar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -236,23 +235,25 @@ export default function CollectionsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-9xl px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="flex items-center gap-2">
-              <BackButton />
-              <HomeButton />
-            </div>
-            <Button
-              onClick={() => setShowCreateDialog(true)}
-              size="sm"
-              className="text-xs sm:text-sm"
-            >
-              <PlusCircle className="mr-1 size-3 sm:mr-2 sm:size-4" />
-              <span className="hidden sm:inline">Create Collection</span>
-              <span className="sm:hidden">Create</span>
-            </Button>
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-9xl px-4 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Collections
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage and organize your test papers into distinct collections and chapters
+            </p>
           </div>
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            size="sm"
+            className="gap-2 self-start sm:self-auto"
+          >
+            <PlusCircle className="size-4" />
+            Create Collection
+          </Button>
         </div>
       </header>
 

@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AnswerKeyForm } from "@/components/answer-key-form";
 import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 
 type Attempt = {
   id: number;
@@ -90,13 +90,13 @@ export default function EnterAnswerKeyPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
+        <Navbar />
+        <header className="border-b border-border/40 bg-card/50">
           <div className="mx-auto max-w-7xl px-4 py-6">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <BackButton />
-              <HomeButton />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   Enter Answer Key
                 </h1>
               </div>
@@ -114,13 +114,13 @@ export default function EnterAnswerKeyPage() {
   if (error || !attempt) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
+        <Navbar />
+        <header className="border-b border-border/40 bg-card/50">
           <div className="mx-auto max-w-7xl px-4 py-6">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <BackButton />
-              <HomeButton />
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   Enter Answer Key
                 </h1>
               </div>
@@ -139,16 +139,16 @@ export default function EnterAnswerKeyPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <BackButton />
-            <HomeButton />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 Enter Answer Key
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Enter the correct answers to evaluate your performance
               </p>
             </div>

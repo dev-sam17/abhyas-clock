@@ -4,34 +4,29 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { PresetsList } from "@/components/presets-list";
-import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 
 export default function PresetsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="flex items-center gap-2">
-              <BackButton />
-              <HomeButton />
-            </div>
-            <Link href="/create-preset">
-              <Button size="sm" className="text-xs sm:text-sm">
-                <PlusCircle className="mr-1 size-3 sm:mr-2 sm:size-4" />
-                <span className="hidden sm:inline">Create Test</span>
-                <span className="sm:hidden">Create</span>
-              </Button>
-            </Link>
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-7xl px-4 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Tests
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose a test to start practicing or set up a new one
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Tests
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-            Choose a test to start practicing
-          </p>
+          <Link href="/create-preset" className="self-start sm:self-auto">
+            <Button size="sm" className="gap-2">
+              <PlusCircle className="size-4" />
+              Create Test
+            </Button>
+          </Link>
         </div>
       </header>
 

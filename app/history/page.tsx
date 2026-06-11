@@ -21,9 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 
 type HistoryAttempt = {
   id: number;
@@ -111,16 +110,13 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <BackButton />
-            <HomeButton />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-7xl px-4 py-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Test History
           </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+          <p className="mt-1 text-sm text-muted-foreground">
             View all your past test attempts
           </p>
         </div>

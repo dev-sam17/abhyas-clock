@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { CheckCircle, XCircle, Clock, Award, AlertCircle, ArrowLeft } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
+import { BackButton } from "@/components/back-button";
 
 type Attempt = {
   id: number;
@@ -101,18 +103,15 @@ export default function ResultsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Link href="/home">
-                <Button variant="ghost" size="icon" title="Go to home">
-                  <ArrowLeft className="size-5" />
-                </Button>
-              </Link>
+        <Navbar />
+        <header className="border-b border-border/40 bg-card/50">
+          <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="flex items-center gap-3">
+              <BackButton />
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                Test Results
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Test Results
-            </h1>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
@@ -130,18 +129,15 @@ export default function ResultsPage() {
   if (error || !attempt) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Link href="/home">
-                <Button variant="ghost" size="icon" title="Go to home">
-                  <ArrowLeft className="size-5" />
-                </Button>
-              </Link>
+        <Navbar />
+        <header className="border-b border-border/40 bg-card/50">
+          <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="flex items-center gap-3">
+              <BackButton />
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                Test Results
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Test Results
-            </h1>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
@@ -160,21 +156,20 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
-          <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <Link href="/home">
-                <Button variant="ghost" size="icon" title="Go to home">
-                  <ArrowLeft className="size-5" />
-                </Button>
-              </Link>
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-7xl px-4 py-6">
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                Test Results
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {attempt.preset.name}
+              </p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Test Results
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-            {attempt.preset.name}
-          </p>
         </div>
       </header>
 

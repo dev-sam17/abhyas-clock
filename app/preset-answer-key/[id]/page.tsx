@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { PresetAnswerKeyForm } from "@/components/preset-answer-key-form";
 import { BackButton } from "@/components/back-button";
-import { HomeButton } from "@/components/home-button";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 
 export default async function PresetAnswerKeyPage({
   params,
@@ -41,16 +41,16 @@ export default async function PresetAnswerKeyPage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border bg-card">
+      <Navbar />
+      <header className="border-b border-border/40 bg-card/50">
         <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <BackButton />
-            <HomeButton />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                 Add Answer Key
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Set the correct answers for &quot;{preset.name}&quot; so
                 attempts can be evaluated automatically
               </p>

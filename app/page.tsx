@@ -18,6 +18,7 @@ import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Footer } from "@/components/footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -36,7 +37,10 @@ export default function LandingPage() {
     }
   };
   return (
-    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted">
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted relative">
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 py-20 sm:px-6 lg:px-8 lg:py-32">
         <div className="mx-auto max-w-7xl">
