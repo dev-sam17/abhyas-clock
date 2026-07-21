@@ -29,11 +29,11 @@ export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTests, setActiveTests] = useState<{ id: number; name: string }[]>([]);
+  const [activeTests, setActiveTests] = useState<{ id: number; name: string; collectionName?: string; chapterName?: string }[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const active: { id: number; name: string }[] = [];
+      const active: { id: number; name: string; collectionName?: string; chapterName?: string }[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith("test-")) {
@@ -44,6 +44,8 @@ export default function HomePage() {
               active.push({
                 id,
                 name: state.presetName || `Test #${id}`,
+                collectionName: state.collectionName,
+                chapterName: state.chapterName,
               });
             } catch (e) {
               active.push({ id, name: `Test #${id}` });
@@ -121,7 +123,12 @@ export default function HomePage() {
                       <h4 className="font-semibold text-amber-800 dark:text-amber-300">
                         Test in Progress: {test.name}
                       </h4>
-                      <p className="text-xs text-muted-foreground">
+                      {test.collectionName && test.chapterName ? (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {test.collectionName} • {test.chapterName}
+                        </p>
+                      ) : null}
+                      <p className="text-xs text-muted-foreground mt-1">
                         You have an unfinished attempt for this test.
                       </p>
                     </div>

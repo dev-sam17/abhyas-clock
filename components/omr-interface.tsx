@@ -28,6 +28,12 @@ type TestPreset = {
   testMode: string;
   timeLimitMinutes: number | null;
   allowOvertime: boolean;
+  chapter?: {
+    name: string;
+    collection: {
+      name: string;
+    };
+  } | null;
 };
 
 type Answer = {
@@ -103,10 +109,12 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
         isOvertime,
         isPaused: preset.testMode === "stopwatch" && !isRunning && !isSubmitting,
         presetName: preset.name,
+        collectionName: preset.chapter?.collection.name,
+        chapterName: preset.chapter?.name,
       };
       localStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
     }
-  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode, preset.name]);
+  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode, preset.name, preset.chapter]);
 
   // Disable right-click and browser navigation during test
   useEffect(() => {

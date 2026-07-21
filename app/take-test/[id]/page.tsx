@@ -16,6 +16,13 @@ export default async function TakeTestPage({
 
   const preset = await prisma.testPreset.findUnique({
     where: { id: presetId },
+    include: {
+      chapter: {
+        include: {
+          collection: true,
+        },
+      },
+    },
   });
 
   if (!preset) {
