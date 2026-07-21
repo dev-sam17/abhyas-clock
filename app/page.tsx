@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
@@ -23,8 +23,19 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default function LandingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/home");
+    }
+  }, [session, router]);
 
   const handleGoogleSignIn = async () => {
+    if (session) {
+      router.push("/home");
+      return;
+    }
     setIsLoading(true);
     try {
       await authClient.signIn.social({
