@@ -9,6 +9,7 @@ import { PerformanceChart } from "@/components/performance-chart";
 import { TestBreakdown } from "@/components/test-breakdown";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 type AnalyticsData = {
   totalAttempts: number;
@@ -64,6 +65,10 @@ export default function AnalyticsPage() {
     return hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
   };
 
+  if (loading) {
+    return <LoadingSpinner message="Loading analytics..." />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -79,13 +84,7 @@ export default function AnalyticsPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
-        {loading ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            </CardContent>
-          </Card>
-        ) : error || !analytics ? (
+        {error || !analytics ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-sm text-destructive">
