@@ -64,8 +64,15 @@ export default function HomePage() {
                         collectionName: state.collectionName,
                         chapterName: state.chapterName,
                       });
+                      
+                      // Auto-sync offline/legacy local tests up to Redis
+                      fetch("/api/test-progress", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ presetId: id, state }),
+                      }).catch(console.error);
                     } catch {
-                      redisTests.push({ id, name: `Test #${id}` });
+                      redisTests.push({ id, name: `Test #${id}`, collectionName: undefined, chapterName: undefined });
                     }
                   }
                 }
@@ -97,7 +104,7 @@ export default function HomePage() {
                 chapterName: state.chapterName,
               });
             } catch {
-              active.push({ id, name: `Test #${id}` });
+              active.push({ id, name: `Test #${id}`, collectionName: undefined, chapterName: undefined });
             }
           }
         }
