@@ -474,6 +474,11 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
           <CardContent className="p-3 sm:p-4 md:p-6 flex flex-1 min-h-0 flex-col overflow-hidden">
             <header className="shrink-0 mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
+                {preset.chapter && (
+                  <p className="text-lg font-semibold">
+                    {preset.chapter.collection.name} - {preset.chapter.name}
+                  </p>
+                )}
                 <h2 className="text-xl font-bold sm:text-2xl">{preset.name}</h2>
                 <p className="text-xs text-muted-foreground sm:text-sm">
                   {preset.totalQuestions} questions • Starting from Q
