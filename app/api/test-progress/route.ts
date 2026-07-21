@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redis } from "@/lib/redis";
+import { prisma } from "@/lib/prisma";
 
 // Key helpers
 const activeTestsKey = (userId: string) => `active-tests:${userId}`;
@@ -39,6 +40,13 @@ export async function GET() {
     }
     const results = await pipeline.exec();
 
+    // Fetch DB presets to guarantee we have collection and chapter names (especially for legacy tests)
+    const presets = await prisma.testPreset.findMany({
+      where: { id: { in: presetIds.map(Number) } },
+      include: { chapter: { include: { collection: true } } },
+    });
+    const presetMap = new Map(presets.map((p) => [p.id, p]));
+
     const activeTests: {
       presetId: number;
       presetName: string;
@@ -67,14 +75,17 @@ export async function GET() {
 
       // Reconstruct elapsed seconds from startedAt + elapsedAtSync
       const elapsedAtSync = (data.elapsedAtSync as number) || 0;
+      
+      const pidNum = Number(presetIds[i]);
+      const presetDb = presetMap.get(pidNum);
 
       activeTests.push({
-        presetId: Number(presetIds[i]),
-        presetName: (data.presetName as string) || `Test #${presetIds[i]}`,
-        collectionName: data.collectionName as string | undefined,
-        chapterName: data.chapterName as string | undefined,
+        presetId: pidNum,
+        presetName: presetDb?.name || (data.presetName as string) || `Test #${presetIds[i]}`,
+        collectionName: presetDb?.chapter?.collection.name || data.collectionName as string | undefined,
+        chapterName: presetDb?.chapter?.name || data.chapterName as string | undefined,
         answeredCount,
-        totalQuestions: (data.totalQuestions as number) || 0,
+        totalQuestions: presetDb?.totalQuestions || (data.totalQuestions as number) || 0,
         seconds: elapsedAtSync,
         updatedAt: (data.updatedAt as string) || "",
       });
