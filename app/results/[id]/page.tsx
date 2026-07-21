@@ -10,6 +10,8 @@ import { CheckCircle, XCircle, Clock, Award, AlertCircle } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { BackButton } from "@/components/back-button";
+import { QuestionTimeAnalytics } from "@/components/question-time-analytics";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 type Attempt = {
   id: number;
@@ -31,6 +33,7 @@ type Attempt = {
     questionNumber: number;
     selectedAnswer: string | null;
     isCorrect: boolean | null;
+    timeSpentSeconds: number | null;
   }>;
 };
 
@@ -101,29 +104,7 @@ export default function ResultsPage() {
   }, [attempt]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navbar />
-        <header className="border-b border-border/40 bg-card/50">
-          <div className="mx-auto max-w-7xl px-4 py-2">
-            <div className="flex items-center gap-3">
-              <BackButton />
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                Test Results
-              </h1>
-            </div>
-          </div>
-        </header>
-        <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Loading...</p>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <LoadingSpinner message="Loading your results..." />;
   }
 
   if (error || !attempt) {
@@ -233,6 +214,25 @@ export default function ResultsPage() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Per-Question Time Analysis */}
+        <div className="mb-6">
+          <QuestionTimeAnalytics
+            attempts={[
+              {
+                id: attempt.id,
+                preset: { name: attempt.preset.name },
+                timeTakenSeconds: attempt.timeTakenSeconds || 0,
+                answers: attempt.answers.map((ans) => ({
+                  questionNumber: ans.questionNumber,
+                  timeSpentSeconds: ans.timeSpentSeconds || 0,
+                  isCorrect: ans.isCorrect,
+                  selectedAnswer: ans.selectedAnswer,
+                })),
+              },
+            ]}
+          />
         </div>
 
         {/* Answer Review */}

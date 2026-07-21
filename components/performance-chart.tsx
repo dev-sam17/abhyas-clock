@@ -50,12 +50,12 @@ export function PerformanceChart({ attempts }: { attempts: Attempt[] }) {
               <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
-                  stopColor="hsl(var(--primary))"
+                  stopColor="#8b5cf6"
                   stopOpacity={0.8}
                 />
                 <stop
                   offset="95%"
-                  stopColor="hsl(var(--primary))"
+                  stopColor="#8b5cf6"
                   stopOpacity={0.1}
                 />
               </linearGradient>
@@ -75,7 +75,7 @@ export function PerformanceChart({ attempts }: { attempts: Attempt[] }) {
             <Area
               type="monotone"
               dataKey="score"
-              stroke="hsl(var(--primary))"
+              stroke="#8b5cf6"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorScore)"

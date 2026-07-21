@@ -7,8 +7,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PerformanceChart } from "@/components/performance-chart";
 import { TestBreakdown } from "@/components/test-breakdown";
-import { QuestionAnalytics } from "@/components/question-analytics";
-import { QuestionTimeAnalytics } from "@/components/question-time-analytics";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 
@@ -196,10 +194,6 @@ export default function AnalyticsPage() {
             <PerformanceChart attempts={analytics.attempts} />
 
             <TestBreakdown attempts={analytics.attempts} />
-
-            <QuestionAnalytics questionStats={analytics.questionStats} />
-
-            <QuestionTimeAnalytics attempts={analytics.attemptsWithTimes} />
           </div>
         )}
       </main>

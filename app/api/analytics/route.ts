@@ -28,6 +28,11 @@ export async function GET() {
           select: {
             name: true,
             startingQuestion: true,
+            chapter: {
+              include: {
+                collection: true
+              }
+            }
           },
         },
         answers: {
@@ -86,6 +91,8 @@ export async function GET() {
       total_questions: attempt.totalQuestions,
       completed_at: attempt.completedAt,
       preset_name: attempt.preset.name,
+      collection_name: attempt.preset.chapter?.collection.name,
+      chapter_name: attempt.preset.chapter?.name,
     }));
 
     const questionStatsMap = new Map<

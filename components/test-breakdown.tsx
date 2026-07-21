@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
+import { ChevronRight, Clock, Target } from "lucide-react";
 
 type Attempt = {
   id: number;
@@ -13,87 +14,68 @@ type Attempt = {
   unanswered: number;
   total_questions: number;
   time_taken_seconds: number;
+  completed_at: Date | null;
+  collection_name?: string;
+  chapter_name?: string;
 };
 
 export function TestBreakdown({ attempts }: { attempts: Attempt[] }) {
-  // Group attempts by test
-  const testStats = attempts.reduce(
-    (acc, attempt) => {
-      const testId = attempt.test_id;
-      if (!acc[testId]) {
-        acc[testId] = {
-          testName: attempt.test_name,
-          attempts: [],
-        };
-      }
-      acc[testId].attempts.push(attempt);
-      return acc;
-    },
-    {} as Record<number, { testName: string; attempts: Attempt[] }>
-  );
+  const sortedAttempts = [...attempts].sort((a, b) => {
+    const dateA = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+    const dateB = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+    return dateB - dateA; // Latest first
+  });
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Test Performance Breakdown</CardTitle>
+        <CardTitle>Recent Attempts</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {Object.entries(testStats).map(([testId, stats]) => {
-          const avgScore =
-            stats.attempts.reduce((sum, a) => sum + Number(a.percentage), 0) /
-            stats.attempts.length;
-          const bestScore = Math.max(
-            ...stats.attempts.map((a) => Number(a.percentage))
-          );
-          const totalCorrect = stats.attempts.reduce(
-            (sum, a) => sum + a.correct_answers,
-            0
-          );
-          const totalQuestions = stats.attempts.reduce(
-            (sum, a) => sum + a.total_questions,
-            0
-          );
-          const accuracyRate =
-            totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
-          const avgTimePerQuestion =
-            totalQuestions > 0
-              ? Math.round(
-                  stats.attempts.reduce(
-                    (sum, a) => sum + a.time_taken_seconds,
-                    0
-                  ) / totalQuestions
-                )
-              : 0;
-
-          return (
-            <div key={testId} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{stats.testName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {stats.attempts.length} attempts
-                  </p>
+      <CardContent>
+        <div className="space-y-3">
+          {sortedAttempts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No recent attempts found.
+            </p>
+          ) : (
+            sortedAttempts.map((attempt) => (
+              <Link key={attempt.id} href={`/results/${attempt.id}`}>
+                <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors group">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold">
+                      {attempt.test_name}
+                      {attempt.collection_name && attempt.chapter_name && (
+                        <span className="ml-2 font-normal text-muted-foreground text-xs">
+                          ({attempt.collection_name} / {attempt.chapter_name})
+                        </span>
+                      )}
+                    </span>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Target className="size-3" />
+                        {Number(attempt.percentage).toFixed(1)}% Score
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="size-3" />
+                        {formatTime(attempt.time_taken_seconds)}
+                      </span>
+                      <span>
+                        {new Date(attempt.completed_at || 0).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="size-4 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    Avg: {avgScore.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Best: {bestScore.toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-              <Progress value={avgScore} className="h-2" />
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Accuracy: {accuracyRate.toFixed(1)}%</span>
-                <span>Avg: {avgTimePerQuestion}s/q</span>
-                <span>
-                  {totalCorrect}/{totalQuestions} correct
-                </span>
-              </div>
-            </div>
-          );
-        })}
+              </Link>
+            ))
+          )}
+        </div>
       </CardContent>
     </Card>
   );
