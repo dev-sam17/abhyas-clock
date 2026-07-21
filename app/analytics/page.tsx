@@ -70,7 +70,7 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <header className="border-b border-border/40 bg-card/50">
-        <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-2">
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Performance Analytics
           </h1>

@@ -10,7 +10,7 @@ export default function CreatePresetPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <header className="border-b border-border/40 bg-card/50">
-        <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-2">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>

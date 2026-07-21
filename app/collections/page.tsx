@@ -237,7 +237,7 @@ export default function CollectionsPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <header className="border-b border-border/40 bg-card/50">
-        <div className="mx-auto max-w-9xl px-4 py-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto max-w-9xl px-4 py-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Collections
