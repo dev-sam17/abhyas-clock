@@ -25,6 +25,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -330,6 +331,12 @@ export default function CollectionDetailPage() {
                 {totalPresets} test
                 {totalPresets !== 1 ? "s" : ""}
               </Badge>
+              <Link href={`/collections/${id}/stats`}>
+                <Button size="sm" variant="outline" className="gap-1">
+                  <BarChart3 className="size-4" />
+                  View Stats
+                </Button>
+              </Link>
               <Button
                 size="sm"
                 onClick={() => {

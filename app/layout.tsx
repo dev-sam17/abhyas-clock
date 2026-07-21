@@ -13,6 +13,10 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -20,13 +24,6 @@ export const metadata: Metadata = {
   description:
     "Practice offline competitive exam papers with detailed analytics",
   manifest: "/manifest.json",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: "#3b82f6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
