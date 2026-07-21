@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,6 +43,38 @@ type Answer = {
   markedForReview?: boolean;
 };
 
+// Helper: restore state from a parsed state object
+function restoreState(
+  data: Record<string, unknown>,
+  setSeconds: (s: number) => void,
+  setAnswers: (a: Answer[]) => void,
+  setQuestionTimes: (qt: Map<number, number>) => void,
+  setCurrentQuestionIndex: (i: number) => void,
+  setIsOvertime: (o: boolean) => void,
+  setIsRunning: (r: boolean) => void,
+  setTestStarted: (t: boolean) => void,
+  setShowDisclaimerDialog: (d: boolean) => void,
+  restoredRef: React.MutableRefObject<boolean>,
+) {
+  const savedSeconds = (data.elapsedAtSync as number) ?? (data.seconds as number) ?? 0;
+  setSeconds(savedSeconds);
+  if (data.answers) setAnswers(data.answers as Answer[]);
+  const savedTimes = data.questionTimes as Record<string, number> | undefined;
+  if (savedTimes) {
+    setQuestionTimes(
+      new Map(Object.entries(savedTimes).map(([k, v]) => [Number(k), v]))
+    );
+  }
+  if (typeof data.currentQuestionIndex === "number")
+    setCurrentQuestionIndex(data.currentQuestionIndex as number);
+  if (data.isOvertime) setIsOvertime(true);
+  restoredRef.current = true;
+  setTestStarted(true);
+  setShowDisclaimerDialog(false);
+  const isPaused = data.isPaused as boolean | undefined;
+  setIsRunning(!isPaused);
+}
+
 export function OMRInterface({ preset }: { preset: TestPreset }) {
   const router = useRouter();
   const [testStarted, setTestStarted] = useState(false);
@@ -61,60 +93,141 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
     useState<number>(Date.now());
 
   const restoredFromCache = useRef(false);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestStateRef = useRef<Record<string, unknown> | null>(null);
 
-  // Load persisted state from localStorage
-  useEffect(() => {
-    const savedState = localStorage.getItem(`test-${preset.id}`);
-    if (savedState) {
-      try {
-        const {
-          seconds: savedSeconds,
-          answers: savedAnswers,
-          questionTimes: savedTimes,
-          currentQuestionIndex: savedIndex,
-          isOvertime: savedOvertime,
-          isPaused: savedIsPaused,
-        } = JSON.parse(savedState);
-        setSeconds(savedSeconds);
-        if (savedAnswers) setAnswers(savedAnswers);
-        if (savedTimes)
-          setQuestionTimes(
-            new Map(
-              Object.entries(savedTimes).map(([k, v]) => [
-                Number(k),
-                v as number,
-              ])
-            )
-          );
-        if (typeof savedIndex === "number") setCurrentQuestionIndex(savedIndex);
-        if (savedOvertime) setIsOvertime(true);
-        restoredFromCache.current = true;
-        setTestStarted(true);
-        setShowDisclaimerDialog(false);
-        setIsRunning(!savedIsPaused);
-      } catch (e) {
-        console.error("Failed to restore test state", e);
-      }
+  // Build current state blob (used by both localStorage and Redis sync)
+  const buildStateBlob = useCallback(() => {
+    return {
+      answers,
+      questionTimes: Object.fromEntries(questionTimes),
+      currentQuestionIndex,
+      isOvertime,
+      isPaused: preset.testMode === "stopwatch" && !isRunning && !isSubmitting,
+      elapsedAtSync: seconds,
+      totalQuestions: preset.totalQuestions,
+      presetName: preset.name,
+      collectionName: preset.chapter?.collection.name,
+      chapterName: preset.chapter?.name,
+    };
+  }, [answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, seconds, preset]);
+
+  // Sync state to Redis (called in debounced fashion)
+  const syncToRedis = useCallback(async () => {
+    const state = latestStateRef.current;
+    if (!state) return;
+    try {
+      await fetch("/api/test-progress", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ presetId: preset.id, state }),
+      });
+    } catch (e) {
+      console.error("[sync] Failed to sync to Redis:", e);
     }
   }, [preset.id]);
 
-  // Persist state to localStorage
+  // Schedule a debounced Redis sync (3s debounce)
+  const scheduleSyncToRedis = useCallback(() => {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      syncToRedis();
+    }, 3000);
+  }, [syncToRedis]);
+
+  // Delete test progress from Redis
+  const deleteFromRedis = useCallback(async () => {
+    try {
+      await fetch("/api/test-progress", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ presetId: preset.id }),
+      });
+    } catch (e) {
+      console.error("[sync] Failed to delete from Redis:", e);
+    }
+  }, [preset.id]);
+
+  // Load persisted state: try Redis first, fall back to localStorage
+  useEffect(() => {
+    let cancelled = false;
+    const loadState = async () => {
+      // 1. Try Redis
+      try {
+        const res = await fetch(`/api/test-progress/${preset.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && !cancelled) {
+            restoreState(
+              data, setSeconds, setAnswers, setQuestionTimes,
+              setCurrentQuestionIndex, setIsOvertime, setIsRunning,
+              setTestStarted, setShowDisclaimerDialog, restoredFromCache,
+            );
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("[sync] Redis load failed, trying localStorage:", e);
+      }
+
+      // 2. Fall back to localStorage
+      if (cancelled) return;
+      const savedState = localStorage.getItem(`test-${preset.id}`);
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          if (!cancelled) {
+            restoreState(
+              parsed, setSeconds, setAnswers, setQuestionTimes,
+              setCurrentQuestionIndex, setIsOvertime, setIsRunning,
+              setTestStarted, setShowDisclaimerDialog, restoredFromCache,
+            );
+          }
+        } catch (e) {
+          console.error("Failed to restore test state from localStorage", e);
+        }
+      }
+    };
+    loadState();
+    return () => { cancelled = true; };
+  }, [preset.id]);
+
+  // Persist state to localStorage (every state change — offline fallback)
   useEffect(() => {
     if (testStarted) {
-      const state = {
-        seconds,
-        answers,
-        questionTimes: Object.fromEntries(questionTimes),
-        currentQuestionIndex,
-        isOvertime,
-        isPaused: preset.testMode === "stopwatch" && !isRunning && !isSubmitting,
-        presetName: preset.name,
-        collectionName: preset.chapter?.collection.name,
-        chapterName: preset.chapter?.name,
-      };
-      localStorage.setItem(`test-${preset.id}`, JSON.stringify(state));
+      const state = buildStateBlob();
+      // Also store seconds for localStorage compat
+      localStorage.setItem(`test-${preset.id}`, JSON.stringify({ ...state, seconds }));
     }
-  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, preset.testMode, preset.name, preset.chapter]);
+  }, [seconds, answers, questionTimes, currentQuestionIndex, isOvertime, isRunning, isSubmitting, testStarted, preset.id, buildStateBlob, seconds]);
+
+  // Debounced Redis sync — only on meaningful state changes (NOT every timer tick)
+  useEffect(() => {
+    if (!testStarted || isSubmitting) return;
+    const state = buildStateBlob();
+    latestStateRef.current = state;
+    scheduleSyncToRedis();
+  }, [answers, currentQuestionIndex, isRunning, isOvertime, testStarted, isSubmitting, buildStateBlob, scheduleSyncToRedis]);
+
+  // Flush pending sync and cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (syncTimerRef.current) {
+        clearTimeout(syncTimerRef.current);
+        // Fire final sync synchronously via sendBeacon if possible
+        const state = latestStateRef.current;
+        if (state && typeof navigator.sendBeacon === "function") {
+          navigator.sendBeacon(
+            "/api/test-progress",
+            new Blob(
+              [JSON.stringify({ presetId: preset.id, state })],
+              { type: "application/json" }
+            )
+          );
+        }
+      }
+    };
+  }, [preset.id]);
 
   // Disable right-click and browser navigation during test
   useEffect(() => {
@@ -348,6 +461,9 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
       const data = await response.json();
       // Clear saved state after successful submission
       localStorage.removeItem(`test-${preset.id}`);
+      // Cancel pending sync and clean up Redis
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+      deleteFromRedis();
       toast.success("Answers submitted successfully!");
       router.replace(`/enter-key/${data.attemptId}`);
     } catch (error) {
@@ -401,6 +517,21 @@ export function OMRInterface({ preset }: { preset: TestPreset }) {
     setShowDisclaimerDialog(false);
     setIsRunning(true);
     setCurrentQuestionStartTime(Date.now());
+    // Immediately sync initial state to Redis so other devices can see it
+    const initialState = {
+      answers,
+      questionTimes: Object.fromEntries(questionTimes),
+      currentQuestionIndex: 0,
+      isOvertime: false,
+      isPaused: false,
+      elapsedAtSync: 0,
+      totalQuestions: preset.totalQuestions,
+      presetName: preset.name,
+      collectionName: preset.chapter?.collection.name,
+      chapterName: preset.chapter?.name,
+    };
+    latestStateRef.current = initialState;
+    syncToRedis();
   };
 
   // Show disclaimer before test starts

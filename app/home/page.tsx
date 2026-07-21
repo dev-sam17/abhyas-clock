@@ -32,7 +32,56 @@ export default function HomePage() {
   const [activeTests, setActiveTests] = useState<{ id: number; name: string; collectionName?: string; chapterName?: string }[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let cancelled = false;
+
+    const fetchActiveTests = async () => {
+      // 1. Fetch from Redis API
+      try {
+        const res = await fetch("/api/test-progress");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && Array.isArray(data)) {
+            const redisTests = data.map((t: { presetId: number; presetName: string; collectionName?: string; chapterName?: string }) => ({
+              id: t.presetId,
+              name: t.presetName,
+              collectionName: t.collectionName,
+              chapterName: t.chapterName,
+            }));
+            const redisIds = new Set(redisTests.map((t: { id: number }) => t.id));
+
+            // 2. Merge any localStorage-only tests (started offline)
+            if (typeof window !== "undefined") {
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith("test-")) {
+                  const id = parseInt(key.replace("test-", ""));
+                  if (!isNaN(id) && !redisIds.has(id)) {
+                    try {
+                      const state = JSON.parse(localStorage.getItem(key) || "{}");
+                      redisTests.push({
+                        id,
+                        name: state.presetName || `Test #${id}`,
+                        collectionName: state.collectionName,
+                        chapterName: state.chapterName,
+                      });
+                    } catch {
+                      redisTests.push({ id, name: `Test #${id}` });
+                    }
+                  }
+                }
+              }
+            }
+
+            setActiveTests(redisTests);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch active tests from Redis:", e);
+      }
+
+      // 3. Fallback: localStorage only
+      if (cancelled || typeof window === "undefined") return;
       const active: { id: number; name: string; collectionName?: string; chapterName?: string }[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -47,14 +96,17 @@ export default function HomePage() {
                 collectionName: state.collectionName,
                 chapterName: state.chapterName,
               });
-            } catch (e) {
+            } catch {
               active.push({ id, name: `Test #${id}` });
             }
           }
         }
       }
       setActiveTests(active);
-    }
+    };
+
+    fetchActiveTests();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -83,10 +135,20 @@ export default function HomePage() {
     router.push("/");
   };
 
-  const handleDiscardHomeProgress = (presetId: number) => {
+  const handleDiscardHomeProgress = async (presetId: number) => {
     if (confirm("Are you sure you want to discard your saved progress for this test? This cannot be undone.")) {
       localStorage.removeItem(`test-${presetId}`);
       setActiveTests(prev => prev.filter(t => t.id !== presetId));
+      // Clean up from Redis
+      try {
+        await fetch("/api/test-progress", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ presetId }),
+        });
+      } catch (e) {
+        console.error("Failed to delete from Redis:", e);
+      }
       toast.success("Progress reset successfully");
     }
   };
