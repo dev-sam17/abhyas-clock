@@ -99,7 +99,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <header className="border-b border-border/40 bg-card/50">
-        <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-2">
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Welcome back, {user?.name?.split(" ")[0] || "User"} 👋
           </h1>
@@ -109,12 +109,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-12 flex-1">
+      <main className="mx-auto max-w-7xl px-4 py-8 flex-1">
         {activeTests.length > 0 && (
-          <div className="mb-8 space-y-4">
+          <div className="mb-6 space-y-2">
             {activeTests.map((test) => (
               <Card key={test.id} className="border-amber-500/50 bg-amber-500/5 dark:bg-amber-950/10 border-2">
-                <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
+                <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-1 gap-2">
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500 text-white animate-pulse shrink-0">
                       <Clock className="size-5" />
@@ -128,9 +128,6 @@ export default function HomePage() {
                           {test.collectionName} • {test.chapterName}
                         </p>
                       ) : null}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        You have an unfinished attempt for this test.
-                      </p>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
